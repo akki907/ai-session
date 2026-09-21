@@ -1,0 +1,14 @@
+IT Security Policy Handbook v3.2
+
+Section 5.1 - VPN Policy
+Personal devices require MFA. Approved for use only with prior IT approval.
+Connection drops every 5 minutes often indicate a stale session token —
+reconnect via the IT VPN client.
+
+Section 5.2 - Password Policy
+Passwords must be at least 14 characters and rotated every 90 days.
+MFA is mandatory for all production systems.
+
+Section 5.3 - Incident Reporting
+Security incidents must be reported within 1 hour of detection.
+Contact the security team via the on-call rotation.

@@ -1,0 +1,18 @@
+HR/IT/Security Policy Handbook v3.2
+
+Section 4.1 - Leave Policy
+Full-time employees receive 25 vacation days per year, accrued at 2.08 days per month.
+Unused days roll over up to a maximum of 5 days.
+
+Section 4.2 - Sick Leave
+Employees may take up to 10 sick days per year with no doctor's note required.
+
+Section 4.3 - Parental Leave
+New parents are entitled to 16 weeks of paid parental leave.
+
+Section 5.1 - VPN Policy
+Personal VPN access requires MFA. Approved from personal devices only with prior IT approval.
+
+Section 5.2 - Password Policy
+Passwords must be at least 14 characters and rotated every 90 days.
+MFA is mandatory for all production systems.

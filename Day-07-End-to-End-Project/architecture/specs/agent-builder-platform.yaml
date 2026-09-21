@@ -1,0 +1,92 @@
+# Agent Builder Platform — Sample Agent Spec
+# This YAML is loaded at runtime by the Workflow Engine.
+
+id: agent-it-support
+version: 1.0.0
+description: |
+  Internal IT support agent. Routes questions, creates tickets,
+  and notifies Slack on resolution. Built for the IT business unit.
+
+owner: it-business-unit
+tags: [it-support, internal, jira, slack]
+
+model:
+  provider: azure
+  name: gpt-4o
+  temperature: 0.2
+  max_tokens: 4000
+
+system_prompt: |
+  You are an internal IT support agent for {company_name}.
+  Always cite your sources. If you cannot answer, create a ticket.
+  Never discuss salary, SSN, or other PII.
+
+tools:
+  - name: search_docs
+    mcp_server: docs-mcp
+    version: "1.0.0"
+    description: Search the IT knowledge base.
+  - name: get_ticket_status
+    mcp_server: jira-mcp
+    version: "2.1.0"
+    description: Look up an existing Jira ticket.
+  - name: create_ticket
+    mcp_server: jira-mcp
+    version: "2.1.0"
+    description: Open a new Jira ticket.
+    requires_approval: true            # HITL gate
+    approvers: [it-managers]
+  - name: send_slack_notification
+    mcp_server: slack-mcp
+    version: "1.0.0"
+    description: Post a message to a Slack channel.
+
+rag:
+  collections:
+    - name: it-policies
+      top_k: 5
+      min_score: 0.7
+    - name: security-policies
+      top_k: 3
+      min_score: 0.8
+
+guardrails:
+  input:
+    - pii_redaction
+    - prompt_injection_detection
+    - topic_block: [salary, ssn, credit_card]
+  output:
+    - json_schema_validation
+    - toxicity_filter
+    - pii_redaction
+
+memory:
+  short_term:
+    type: in_memory
+    ttl_seconds: 1800
+  long_term:
+    type: vector_store
+    collection: user-profiles
+    embed_model: text-embedding-3-small
+
+hitl:
+  approve_before:
+    - create_ticket
+  escalation:
+    on_low_confidence: true
+    threshold: 0.6
+    notify: [it-managers]
+
+limits:
+  max_iterations: 8
+  max_tokens_per_run: 50000
+  timeout_seconds: 120
+  budget_usd_per_run: 0.10
+  budget_usd_per_user_per_day: 5.00
+
+observability:
+  trace_to: [langfuse, otel]
+  log_level: INFO
+  sample_rate: 1.0
+  capture_prompts: true
+  capture_responses: true

@@ -1,0 +1,15 @@
+# uv
+.venv/
+uv.lock
+
+# python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# env
+.env
+.env.local
+
+# logs
+*.log

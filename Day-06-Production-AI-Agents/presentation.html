@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 4 · Production AI Agents</title>
+<style>
+  /* ------------------------------------------------------------------
+     Day 6 design system (mirrors Day-01). Six pastel section tokens,
+     serif headings on a paper background, system font stacks.
+     Section colours are reused for the chip, progress block, agenda and
+     border accents so colour always carries meaning.
+     ------------------------------------------------------------------ */
+  :root {
+    --paper: #F4F6FB;
+    --surface: #FFFFFF;
+    --ink: #151D35;
+    --muted: #56617C;
+    --rule: #D5DBE8;
+    --focus: #2B3FE0;
+
+    --c0: #E2E7F1; --c0i: #33405E;   /* overview / recap */
+    --c1: #C6EBD8; --c1i: #0C5B3B;   /* foundations */
+    --c2: #DAD3FB; --c2i: #3A2A9C;   /* training & context */
+    --c3: #F8D3DB; --c3i: #8B1D39;   /* limitations */
+    --c4: #CDE4FB; --c4i: #0E4C8C;   /* prompting */
+    --c5: #F7EAAE; --c5i: #674F00;   /* output & safety */
+
+    --code-bg: #101828;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: "Avenir Next", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Liberation Mono", monospace;
+  }
+  .c0 { --bg: var(--c0); --fg: var(--c0i); }
+  .c1 { --bg: var(--c1); --fg: var(--c1i); }
+  .c2 { --bg: var(--c2); --fg: var(--c2i); }
+  .c3 { --bg: var(--c3); --fg: var(--c3i); }
+  .c4 { --bg: var(--c4); --fg: var(--c4i); }
+  .c5 { --bg: var(--c5); --fg: var(--c5i); }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--paper); color: var(--ink);
+    font-family: var(--sans); overflow: hidden; }
+
+  /* ---------- slide frame ---------- */
+  .deck { width: 100vw; height: 100vh; position: relative; }
+  .slide { position: absolute; inset: 0; display: none; overflow-y: auto;
+    padding: 36px clamp(20px, 6vw, 88px) 88px; }
+  .slide.active { display: block; }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+
+  .sec, .tag { display: inline-block; background: var(--bg); color: var(--fg);
+    font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
+  .sec { margin-bottom: 14px; }
+
+  /* ---------- type ---------- */
+  h1, h2, h3 { font-family: var(--serif); color: var(--ink); }
+  h2 { font-size: clamp(28px, 3.4vw, 42px); line-height: 1.12; font-weight: 600;
+    letter-spacing: -0.01em; margin-bottom: 18px; max-width: 34ch; }
+  h2.wide { max-width: none; }
+  h3 { font-size: 19px; font-weight: 600; margin: 16px 0 6px; }
+  p { font-size: 18px; line-height: 1.6; margin-bottom: 10px; max-width: 70ch; }
+  ul, ol { font-size: 17px; line-height: 1.6; padding-left: 22px; margin-bottom: 12px; max-width: 70ch; }
+  li { margin-bottom: 6px; }
+  .muted { color: var(--muted); }
+  code { background: #E6EAF4; color: var(--ink); padding: 1px 6px; border-radius: 4px;
+    font-family: var(--mono); font-size: .88em; }
+
+  /* ---------- code ---------- */
+  pre { background: var(--code-bg); color: #DCE3F5; border-radius: 8px;
+    padding: 18px 22px; overflow-x: auto; font-family: var(--mono);
+    font-size: 14px; line-height: 1.6; margin: 12px 0; }
+  pre .kw  { color: #C4B5FD; }
+  pre .str { color: #8EE6B8; }
+  pre .com { color: #7C89A8; font-style: italic; }
+  pre .num { color: #F5D66B; }
+  pre .fn  { color: #8CC8FF; }
+  pre strong { color: #F5D66B; }
+
+  /* ---------- tables: ruled, not boxed ---------- */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 15px; }
+  th { text-align: left; font-size: 13px; font-weight: 700; color: var(--muted);
+    padding: 8px 16px 8px 0; border-bottom: 2px solid var(--ink); }
+  td { padding: 10px 16px 10px 0; border-bottom: 1px solid var(--rule);
+    vertical-align: top; line-height: 1.45; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+  td.wrapfirst:first-child, table.wrapfirst td:first-child { white-space: normal; }
+  td .sub { display: block; color: var(--muted); font-weight: 400; font-size: 13.5px; margin-top: 2px; }
+  th.bad { color: var(--c3i); } th.good { color: var(--c1i); }
+
+  /* ---------- layout helpers ---------- */
+  .grid { display: grid; gap: 22px 28px; }
+  .grid > pre { margin: 0; align-self: start; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .g-split { grid-template-columns: minmax(280px, 0.9fr) 1.4fr; align-items: start; }
+  .col { border-top: 3px solid var(--fg, var(--ink)); padding-top: 10px; }
+  .col h3 { margin-top: 0; font-size: 18px; }
+  .col p { font-size: 15px; color: var(--muted); margin: 0; line-height: 1.5; }
+  .col ul { font-size: 15px; line-height: 1.55; color: var(--ink); padding-left: 18px; }
+  .col ul li { margin-bottom: 4px; }
+  .col table { margin: 0; }
+
+  /* ---------- notes (replace gradient call-outs) ---------- */
+  .note { background: #E4EDFA; border-radius: 6px; padding: 12px 16px; margin: 14px 0;
+    font-size: 15.5px; line-height: 1.55; max-width: 100%; }
+  .note.good { background: #DDF3E8; }
+  .note.warn { background: #FBE3E8; }
+  .note strong { color: var(--ink); }
+
+  /* ---------- nested hierarchy ---------- */
+  .nest { position: relative; padding: 32px 14px 14px; border: 1.5px solid var(--rule); }
+  .nest > .lbl { position: absolute; top: 8px; left: 14px; font-weight: 700; font-size: 14px; }
+  .n1 { background: #EEF1F8; border-radius: 16px; }
+  .n2 { background: #E2E7F5; border-radius: 13px; }
+  .n3 { background: #D5DDF2; border-radius: 10px; }
+  .n4 { background: #C7D2EE; border-radius: 8px; }
+  .n5 { background: var(--c1); border-color: var(--c1i); border-radius: 6px; color: var(--c1i);
+    padding: 30px 14px 16px; min-height: 60px; }
+
+  /* ---------- pipeline (transformer) ---------- */
+  .pipe { list-style: none; padding: 0 0 0 26px; position: relative; max-width: none; }
+  .pipe::before { content: ""; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: var(--rule); }
+  .pipe li { position: relative; margin: 0 0 14px; font-size: 16px; line-height: 1.45; }
+  .pipe li::before { content: ""; position: absolute; left: -26px; top: 5px; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--bg); border: 2px solid var(--fg); }
+  .pipe b { display: block; font-size: 16px; }
+  .pipe span { color: var(--muted); font-size: 14.5px; }
+
+  /* ---------- prompt anatomy ---------- */
+  .anat { display: grid; grid-template-columns: 96px 1fr; gap: 10px 14px; align-items: center; }
+  .anat .tag { text-align: center; }
+  .anat div.d { font-size: 15.5px; }
+
+  /* ---------- agenda ---------- */
+  .tl { display: flex; gap: 3px; height: 46px; margin: 8px 0 22px; }
+  .tl div { display: flex; align-items: center; padding: 0 10px; border-radius: 4px;
+    background: var(--bg); color: var(--fg); font-weight: 700; font-size: 14px;
+    overflow: hidden; white-space: nowrap; }
+  .ag { display: grid; grid-template-columns: 190px 1fr 70px; gap: 16px; align-items: center;
+    padding: 11px 0; border-bottom: 1px solid var(--rule); }
+  .ag .sec { margin: 0; justify-self: start; }
+  .ag .t { text-align: right; font-weight: 700; font-family: var(--mono); font-size: 14px; }
+
+  /* ---------- temperature lab ---------- */
+  .lab { background: var(--surface); border: 1.5px solid var(--ink); border-radius: 10px; padding: 18px 22px; margin: 6px 0 12px; }
+  .lab .prompt { font-family: var(--mono); font-size: 16px; margin-bottom: 14px; }
+  .lab .prompt b { background: var(--c4); color: var(--c4i); padding: 1px 8px; border-radius: 4px; }
+  .ctrls { display: flex; gap: 40px; flex-wrap: wrap; margin-bottom: 16px; }
+  .ctrls label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 14px; min-width: 250px; flex: 1; }
+  .ctrls output { font-family: var(--mono); font-weight: 400; color: var(--muted); margin-left: 8px; }
+  input[type=range] { width: 100%; accent-color: var(--ink); }
+  .bar-row { display: grid; grid-template-columns: 130px 1fr 130px; gap: 14px; align-items: center; margin: 7px 0; font-size: 14px; }
+  .bar-row .tok { font-family: var(--mono); }
+  .bar-row .tok i { color: var(--muted); font-style: normal; margin-left: 6px; }
+  .bar-track { height: 22px; background: #EDF0F7; border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--c4i); border-radius: 4px; transition: width .15s ease; }
+  .bar-row.cut .bar-fill { background: #B6BDCF; }
+  .bar-row.cut { color: var(--muted); }
+  .bar-row .pct { font-family: var(--mono); text-align: right; }
+  .lab-note { font-size: 15px; color: var(--muted); margin: 10px 0 0; min-height: 44px; }
+
+  /* ---------- recap questions ---------- */
+  details { border-top: 1px solid var(--rule); padding: 11px 0; }
+  details:last-of-type { border-bottom: 1px solid var(--rule); }
+  summary { cursor: pointer; font-weight: 600; font-size: 16px; line-height: 1.4; }
+  details[open] summary { color: var(--c4i); }
+  details p { font-size: 15px; color: var(--muted); margin: 8px 0 0; }
+
+  /* ---------- title slide: the one memorable moment ---------- */
+  .slide.title-slide.active { display: flex; flex-direction: column; justify-content: center; }
+  .title-slide .wrap { width: 100%; }
+  .title-slide h1 { font-size: clamp(52px, 10vw, 128px); line-height: 1.02; font-weight: 600;
+    letter-spacing: -0.02em; margin: 26px 0 62px; white-space: pre-wrap; }
+  .title-slide .tk { position: relative; display: inline-block; padding: 0 .1em; margin-right: .06em;
+    border-radius: 10px; opacity: 0; transform: translateY(10px);
+    animation: tokin .55s cubic-bezier(.2,.7,.2,1) forwards; animation-delay: calc(var(--i) * .22s + .1s); }
+  .title-slide .tk::after { content: attr(data-id); position: absolute; left: 0; right: 0; bottom: -1.5em;
+    text-align: center; font-family: var(--mono); font-size: 15px; letter-spacing: 0; font-weight: 400;
+    color: var(--muted); opacity: 0; animation: idin .4s ease forwards; animation-delay: calc(var(--i) * .22s + .5s); }
+  .title-slide .tk.a { background: var(--c1); } .title-slide .tk.b { background: var(--c2); } .title-slide .tk.c { background: var(--c4); }
+  .title-slide .lede { font-size: 20px; color: var(--muted); max-width: 46ch; }
+  .title-slide .fine { font-size: 14px; color: var(--muted); }
+  @keyframes tokin { to { opacity: 1; transform: none; } }
+  @keyframes idin { to { opacity: 1; } }
+
+  /* ---------- controls ---------- */
+  .controls { position: fixed; left: 0; right: 0; bottom: 0; height: 56px; background: var(--paper);
+    border-top: 1px solid var(--rule); display: flex; align-items: center; gap: 16px;
+    padding: 0 clamp(16px, 3vw, 32px); z-index: 100; }
+  .btn { background: transparent; border: 1.5px solid var(--ink); color: var(--ink);
+    padding: 6px 14px; border-radius: 6px; font: 600 14px var(--sans); cursor: pointer; }
+  .btn:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+  .strip { display: flex; gap: 3px; flex: 1; align-items: center; height: 24px; }
+  .blk { flex: 1; height: 10px; border-radius: 2px; background: var(--rule); border: 0; padding: 0;
+    cursor: pointer; transition: height .15s ease, background .15s ease; }
+  .blk.seen { background: var(--bg); }
+  .blk.on { background: var(--fg); height: 20px; }
+  .counter { font-family: var(--mono); font-size: 13px; color: var(--muted); min-width: 60px; text-align: center; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  @media (max-width: 900px) {
+    .g2, .g3, .g4, .g-split { grid-template-columns: 1fr; }
+    .ag { grid-template-columns: 1fr 60px; }
+    .ag .d { grid-column: 1 / -1; order: 3; }
+    .bar-row { grid-template-columns: 90px 1fr 90px; }
+    .counter, .fs { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .title-slide .tk, .title-slide .tk::after { animation: none; opacity: 1; transform: none; }
+    .blk, .bar-fill { transition: none; }
+  }
+
+
+  /* ---------- Cross-deck component retune (dark → Day-01 tokens) ---------- */
+  .callout {
+    background: #E4EDFA; border-radius: 6px; padding: 12px 16px; margin: 12px 0;
+    font-size: 15.5px; line-height: 1.55; max-width: 100%;
+  }
+  .callout.good { background: #DDF3E8; }
+  .callout.warn { background: #FBE3E8; }
+  .callout strong { color: var(--ink); }
+  .callout b { color: var(--ink); }
+
+  .diagram {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 22px; margin: 14px 0;
+  }
+  .diagram-row { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+
+  .node {
+    background: var(--bg); color: var(--fg);
+    border: 1.5px solid var(--fg); border-radius: 8px;
+    padding: 10px 16px; font-weight: 600; font-size: 14px;
+    min-width: 110px; text-align: center;
+  }
+  .node.alt    { --bg: var(--c2); --fg: var(--c2i); background: var(--c2); color: var(--c2i); border-color: var(--c2i); }
+  .node.pink   { --bg: var(--c3); --fg: var(--c3i); background: var(--c3); color: var(--c3i); border-color: var(--c3i); }
+  .node.yellow { --bg: var(--c4); --fg: var(--c4i); background: var(--c4); color: var(--c4i); border-color: var(--c4i); }
+  .node.gray   { --bg: #EEF1F8; --fg: var(--muted); background: #EEF1F8; color: var(--muted); border-color: var(--rule); }
+
+  .arrow       { font-size: 22px; color: var(--ink); font-weight: 700; }
+  .arrow-row   { font-size: 18px; color: var(--ink); }
+
+  .steps { counter-reset: step; }
+  .steps li {
+    counter-increment: step; list-style: none;
+    padding-left: 36px; position: relative; margin-bottom: 10px;
+  }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--c1); color: var(--c1i);
+    border: 1.5px solid var(--c1i);
+    font-weight: 700; display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+
+  .qa { display: grid; gap: 10px; }
+  .qa-item { background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 12px 16px; }
+  .qa-item .q { color: var(--c2i); font-weight: 600; margin-bottom: 4px; }
+  .qa-item .a { color: var(--muted); font-size: 14px; }
+
+  .section-grid { display: grid; gap: 10px; }
+  .section-grid .item {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 10px 16px; display: flex;
+    align-items: center; gap: 14px;
+  }
+  .section-grid .num {
+    background: var(--c1); color: var(--c1i);
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; flex-shrink: 0;
+  }
+  .section-grid .name { font-weight: 600; }
+  .section-grid .time { margin-left: auto; color: var(--muted); font-size: 13px; font-family: var(--mono); }
+
+  kbd { background: #E6EAF4; color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 4px; padding: 2px 6px;
+    font-family: var(--mono); font-size: 12px; }
+
+  .slide > * { max-width: 1180px; width: 100%; }
+  .slide .wrap { width: 100%; }
+
+  .grid > .card { border-top: 3px solid var(--fg, var(--ink)); padding-top: 10px;
+    background: transparent; border-radius: 0; }
+  .grid > .card h3 { margin-top: 0; font-size: 18px; }
+  .grid > .card p { font-size: 15px; color: var(--muted); margin: 0; line-height: 1.5; }
+  .card { background: transparent; }
+
+  .grid       { display: grid; gap: 22px 28px; }
+  .grid-2     { grid-template-columns: 1fr 1fr; }
+  .grid-3     { grid-template-columns: repeat(3, 1fr); }
+  .grid-4     { grid-template-columns: repeat(4, 1fr); }
+
+  pre code { background: transparent; color: inherit; padding: 0; font-size: inherit; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+<section class="slide title-slide active"><div class="wrap">
+  <span class="tag c0">Day 6</span>
+  <h1 aria-label="Production AI Agents"><span class="tk a" style="--i:0">Production</span><span class="tk b" style="--i:1">AI</span><span class="tk c" style="--i:2">Agents</span></h1>
+  <p class="lede">From prototype to a system that runs reliably at enterprise scale.</p>
+  <p class="fine">⏱ 45 minutes · 🎯 Hands-on included · Builds on prior days.</p>
+</div></section>
+<section class="slide" data-sec="Overview" data-c="0"><div class="wrap">
+  
+<h2>What You Will Learn</h2>
+<div class="grid grid-2">
+  <div class="card"><h3>API Deployment</h3><p>Expose agents as HTTP endpoints.</p></div>
+  <div class="card"><h3>Async Execution</h3><p>Queue, poll, callback.</p></div>
+  <div class="card"><h3>Streaming / SSE</h3><p>Stream tokens to clients in real time.</p></div>
+  <div class="card"><h3>Long-Running Workflows</h3><p>Durable execution with checkpoints.</p></div>
+  <div class="card"><h3>Observability</h3><p>Traces, logs, metrics, eval.</p></div>
+  <div class="card"><h3>Cost &amp; Security</h3><p>Guardrails, rate limits, budgets.</p></div>
+</div>
+</div></section>
+<section class="slide" data-sec="Agenda" data-c="0"><div class="wrap">
+  
+<h2>Today's 45 Minutes</h2>
+<div class="section-grid">
+  <div class="item"><div class="num">1</div><div class="name">Why production is different</div><div class="time">5 min</div></div>
+  <div class="item"><div class="num">2</div><div class="name">API + async + streaming + retries</div><div class="time">15 min</div></div>
+  <div class="item"><div class="num">3</div><div class="name">Observability + cost + security</div><div class="time">15 min</div></div>
+  <div class="item"><div class="num">4</div><div class="name">Project: Production Enterprise Agent</div><div class="time">5 min</div></div>
+  <div class="item"><div class="num">5</div><div class="name">Discussion + Q&amp;A</div><div class="time">5 min</div></div>
+</div>
+</div></section>
+<section class="slide" data-sec="Architecture" data-c="2"><div class="wrap">
+  
+<h2>Production Enterprise Agent</h2>
+<div class="diagram">
+  <div class="node">Client</div>
+  <div class="arrow">↓</div>
+  <div class="node gray">API Gateway (auth, rate limit)</div>
+  <div class="arrow">↓</div>
+  <div class="node">Agent Service (FastAPI / ASP.NET)</div>
+  <div class="arrow">↓</div>
+  <div class="node alt">LLM</div>
+  <div class="arrow-row">↓</div>
+  <div class="diagram-row">
+    <div class="node pink">Tools / MCP</div>
+    <div class="node pink">External Systems</div>
+  </div>
+  <div class="arrow-row">↓</div>
+  <div class="node yellow">Observability</div>
+  <div class="arrow-row">→ Logs · Metrics · Traces</div>
+</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>Deployment Patterns</h2>
+<table>
+  <tr><th>Pattern</th><th>Use case</th><th>Latency</th></tr>
+  <tr><td><b>Sync request-response</b></td><td>Quick answers</td><td>1–10 s</td></tr>
+  <tr><td><b>Streaming (SSE)</b></td><td>Long completions</td><td>First token &lt; 1 s</td></tr>
+  <tr><td><b>Async + webhook</b></td><td>Long-running tasks</td><td>Submit &amp; forget</td></tr>
+  <tr><td><b>Queue + worker</b></td><td>Bulk processing</td><td>Minutes–hours</td></tr>
+</table>
+<div class="callout"><strong>Rule:</strong> if task &gt; 30 s → async. If task &gt; 5 min → durable workflow.</div>
+</div></section>
+<section class="slide" data-sec="Code" data-c="3"><div class="wrap">
+  
+<h2>Streaming — Server-Sent Events</h2>
+<pre><span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI
+<span class="kw">from</span> fastapi.responses <span class="kw">import</span> StreamingResponse
+
+app = FastAPI()
+
+<span class="kw">async def</span> <span class="fn">stream</span>(prompt: str):
+    <span class="kw">async for</span> chunk <span class="kw">in</span> llm.stream(prompt):
+        <span class="kw">yield</span> <span class="str">f"data: {chunk}
+
+"</span>
+
+<span class="fn">@app.get</span>(<span class="str">"/agent/stream"</span>)
+<span class="kw">async def</span> <span class="fn">agent_stream</span>(q: str):
+    <span class="kw">return</span> StreamingResponse(stream(q), media_type=<span class="str">"text/event-stream"</span>)
+</pre>
+<div class="callout good">First token arrives in &lt; 1 s. User sees progress, not a spinner.</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>Retries, Errors, Timeouts</h2>
+<table>
+  <tr><th>Failure</th><th>Strategy</th></tr>
+  <tr><td>Rate limit (429)</td><td>Exponential backoff + jitter</td></tr>
+  <tr><td>LLM timeout</td><td>Retry once, then fall back to smaller model</td></tr>
+  <tr><td>Tool error</td><td>Catch in tool wrapper, return error string to LLM</td></tr>
+  <tr><td>Bad JSON output</td><td>Retry with "fix your JSON" prompt</td></tr>
+  <tr><td>Hallucination</td><td>Validate against schema; reject if mismatch</td></tr>
+</table>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>Observability — Logs, Metrics, Traces</h2>
+<div class="grid grid-3">
+  <div class="card"><h3>Logs</h3><p>Structured JSON: <code>{run_id, agent, step, latency, tokens}</code></p></div>
+  <div class="card"><h3>Metrics</h3><p>Tokens/sec, cost/run, success rate, p99 latency</p></div>
+  <div class="card"><h3>Traces</h3><p>OpenTelemetry spans for every LLM + tool call</p></div>
+</div>
+<pre><span class="com"># LangSmith · Langfuse · Arize Phoenix · Helicone</span>
+<span class="kw">from</span> langfuse <span class="kw">import</span> Langfuse
+lf = Langfuse()
+trace = lf.trace(name=<span class="str">"agent_run"</span>, user_id=<span class="str">"u-42"</span>)
+trace.span(name=<span class="str">"llm_call"</span>, input=messages).end(output=resp)</pre>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>Evaluation</h2>
+<div class="grid grid-2">
+  <div class="card"><h3>Offline Eval</h3><p>Test set of Q&amp;A. Run agent. Measure accuracy, latency, cost.</p></div>
+  <div class="card"><h3>Online Eval</h3><p>Sample 5% of prod traffic. LLM-as-judge scores quality.</p></div>
+  <div class="card"><h3>Regression Suite</h3><p>Re-run before every deploy. Fail if accuracy drops &gt; 2%.</p></div>
+  <div class="card"><h3>Human Eval</h3><p>Sample 1% weekly. Domain expert rates 1–5.</p></div>
+</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>Cost &amp; Latency Levers</h2>
+<table>
+  <tr><th>Lever</th><th>Effect</th></tr>
+  <tr><td>Use smaller model for classification</td><td>10× cheaper</td></tr>
+  <tr><td>Cache identical prompts</td><td>30–50% savings</td></tr>
+  <tr><td>Truncate context aggressively</td><td>Linear cost reduction</td></tr>
+  <tr><td>Streaming for UX, not for cost</td><td>Same cost, better UX</td></tr>
+  <tr><td>Per-user and per-tenant budgets</td><td>Prevents runaways</td></tr>
+  <tr><td>Batch embeddings off-peak</td><td>Saves infrastructure</td></tr>
+</table>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>Security &amp; Guardrails (Production)</h2>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Input Layer</h3>
+    <ul>
+      <li>Auth + per-user rate limit</li>
+      <li>PII redaction</li>
+      <li>Prompt injection detection</li>
+      <li>Length / topic filter</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Output Layer</h3>
+    <ul>
+      <li>Schema validation</li>
+      <li>Toxicity filter</li>
+      <li>PII redaction (response too)</li>
+      <li>Citation verification</li>
+    </ul>
+  </div>
+</div>
+<div class="callout warn"><strong>Always:</strong> assume the LLM is compromised. Defense in depth.</div>
+</div></section>
+<section class="slide" data-sec="Project" data-c="2"><div class="wrap">
+  
+<h2>Production Enterprise Agent — Concept → Implementation</h2>
+<table>
+  <tr><th>Concept</th><th>Implementation</th></tr>
+  <tr><td>API deployment</td><td>FastAPI / ASP.NET Core endpoint</td></tr>
+  <tr><td>Async execution</td><td>Celery / Azure Service Bus queue</td></tr>
+  <tr><td>Streaming</td><td>SSE endpoint for long answers</td></tr>
+  <tr><td>Long-running</td><td>LangGraph checkpointing + Temporal</td></tr>
+  <tr><td>Retries</td><td>Tenacity with exponential backoff</td></tr>
+  <tr><td>Observability</td><td>Langfuse + OpenTelemetry + Prometheus</td></tr>
+  <tr><td>Cost</td><td>Per-tenant budget alerts</td></tr>
+  <tr><td>Security</td><td>OAuth2 + PII redaction + content filter</td></tr>
+</table>
+</div></section>
+<section class="slide" data-sec="Code" data-c="3"><div class="wrap">
+  
+<h2>FastAPI Agent Endpoint with Tracing + Retry</h2>
+<pre><span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, HTTPException
+<span class="kw">from</span> langfuse <span class="kw">import</span> Langfuse
+<span class="kw">from</span> tenacity <span class="kw">import</span> retry, wait_exponential, stop_after_attempt
+<span class="kw">import</span> logging
+
+app  = FastAPI(); lf = Langfuse()
+log  = logging.getLogger(<span class="str">"agent"</span>)
+
+<span class="fn">@retry</span>(wait=wait_exponential(min=<span class="num">1</span>, max=<span class="num">10</span>),
+       stop=stop_after_attempt(<span class="num">3</span>))
+<span class="kw">async def</span> <span class="fn">llm_call</span>(messages):
+    <span class="kw">return await</span> openai_client.chat.completions.create(
+        model=<span class="str">"gpt-4o-mini"</span>, messages=messages)
+
+<span class="fn">@app.post</span>(<span class="str">"/agent/run"</span>)
+<span class="kw">async def</span> <span class="fn">run_agent</span>(req):
+    trace = lf.trace(name=<span class="str">"agent"</span>, user_id=req.user_id, input=req.query)
+    <span class="kw">try</span>:
+        <span class="kw">with</span> trace.span(name=<span class="str">"loop"</span>):
+            result = <span class="kw">await</span> agent.arun(req.query, user=req.user_id)
+        trace.update(output=result.text, usage=result.usage)
+        log.info(<span class="str">"agent_done"</span>, extra={<span class="str">"tokens"</span>: result.usage})
+        <span class="kw">return</span> {<span class="str">"answer"</span>: result.text, <span class="str">"tool_calls"</span>: result.tool_calls}
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        trace.update(error=<span class="fn">str</span>(e)); log.exception(<span class="str">"agent_failed"</span>)
+        <span class="kw">raise</span> HTTPException(<span class="num">500</span>, <span class="str">"agent error"</span>)
+</pre>
+</div></section>
+<section class="slide" data-sec="Hands-on" data-c="4"><div class="wrap">
+  
+<h2>Hands-on (15 min)</h2>
+<ol class="steps">
+  <li>Open <code>code/day4_fastapi_agent.py</code>.</li>
+  <li>Wrap the Day-1 agent in a FastAPI endpoint.</li>
+  <li>Add SSE streaming.</li>
+  <li>Add Langfuse tracing.</li>
+  <li>Add retry logic with exponential backoff.</li>
+  <li>Add a per-user budget cap.</li>
+</ol>
+</div></section>
+</div>
+<div class="controls">
+  <button class="btn" id="prev" title="Previous (←)">Back</button>
+  <button class="btn" id="next" title="Next (→ or space)">Next</button>
+  <div class="strip" id="strip" role="tablist" aria-label="Slides"></div>
+  <div class="counter"><span id="cur">1</span> / <span id="total"></span></div>
+  <button class="btn fs" id="fs" title="Fullscreen (F)">Fullscreen</button>
+</div>
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var idx = 0;
+  var strip = document.getElementById('strip');
+  document.getElementById('total').textContent = total;
+
+  // Section chip on every content slide + one progress block per slide
+  var blocks = slides.map(function (s, n) {
+    var c = s.getAttribute('data-c') || '0';
+    var name = s.getAttribute('data-sec');
+    if (name) {
+      var chip = document.createElement('span');
+      chip.className = 'sec c' + c;
+      chip.textContent = name;
+      s.querySelector('.wrap').insertBefore(chip, s.querySelector('.wrap').firstChild);
+    }
+    var b = document.createElement('button');
+    b.className = 'blk c' + c;
+    var h = s.querySelector('h2');
+    b.title = (n + 1) + '. ' + (h ? h.textContent : 'Title');
+    b.setAttribute('aria-label', 'Go to slide ' + (n + 1));
+    b.onclick = function () { show(n); };
+    strip.appendChild(b);
+    return b;
+  });
+
+  function show(i) {
+    i = Math.max(0, Math.min(total - 1, i));
+    slides.forEach(function (s, n) { s.classList.toggle('active', n === i); });
+    blocks.forEach(function (b, n) {
+      b.classList.toggle('on', n === i);
+      b.classList.toggle('seen', n < i);
+    });
+    slides[i].scrollTop = 0;
+    document.getElementById('cur').textContent = i + 1;
+    document.getElementById('prev').disabled = i === 0;
+    document.getElementById('next').disabled = i === total - 1;
+    idx = i;
+  }
+
+  function toggleFs() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+
+  document.getElementById('prev').onclick = function () { show(idx - 1); };
+  document.getElementById('next').onclick = function () { show(idx + 1); };
+  document.getElementById('fs').onclick = toggleFs;
+
+  document.addEventListener('keydown', function (e) {
+    var t = e.target && e.target.tagName;
+    if (t === 'INPUT' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return; // let sliders use arrows
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || (e.key === ' ' && t !== 'SUMMARY' && t !== 'BUTTON')) { e.preventDefault(); show(idx + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(idx - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); show(0); }
+    else if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+    else if ((e.key === 'f' || e.key === 'F') && t !== 'INPUT') { toggleFs(); }
+  });
+
+  /* ---------- temperature / top_p lab ---------- */
+  var TOKENS = [['mat', 2.0], ['floor', 1.5], ['sofa', 1.0], ['roof', 0.5], ['moon', 0.1]];
+  var barsEl = document.getElementById('bars');
+  var tempEl = document.getElementById('temp');
+  var toppEl = document.getElementById('topp');
+  var rows = TOKENS.map(function (t) {
+    var row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = '<div class="tok">' + t[0] + '<i>logit ' + t[1].toFixed(1) + '</i></div>' +
+      '<div class="bar-track"><div class="bar-fill"></div></div><div class="pct"></div>';
+    barsEl.appendChild(row);
+    return row;
+  });
+
+  function probs(T) {
+    if (T <= 0) return TOKENS.map(function (_, i) { return i === 0 ? 1 : 0; });
+    var ex = TOKENS.map(function (t) { return Math.exp(t[1] / T); });
+    var s = ex.reduce(function (a, b) { return a + b; }, 0);
+    return ex.map(function (e) { return e / s; });
+  }
+
+  function render() {
+    var T = parseFloat(tempEl.value), P = parseFloat(toppEl.value);
+    document.getElementById('tOut').textContent = T.toFixed(1);
+    document.getElementById('pOut').textContent = P.toFixed(2);
+    var pr = probs(T);
+    var order = pr.map(function (p, i) { return [p, i]; }).sort(function (a, b) { return b[0] - a[0]; });
+    var keep = {}, cum = 0;
+    for (var k = 0; k < order.length; k++) {
+      keep[order[k][1]] = true; cum += order[k][0];
+      if (cum >= P - 1e-9) break;
+    }
+    var kept = Object.keys(keep).length;
+    rows.forEach(function (row, i) {
+      row.classList.toggle('cut', !keep[i]);
+      row.querySelector('.bar-fill').style.width = (pr[i] * 100).toFixed(1) + '%';
+      row.querySelector('.pct').textContent = keep[i]
+        ? (pr[i] / cum * 100).toFixed(0) + '% chance'
+        : 'excluded';
+    });
+    var msg;
+    if (T === 0) msg = 'Temperature 0: always pick the highest-scoring token.';
+    else if (T < 0.6) msg = 'Low temperature: the distribution is sharp, so the top token wins almost every time.';
+    else if (T <= 1.1) msg = 'Around 1: the model\u2019s own probabilities, so you get natural variety.';
+    else msg = 'High temperature: the distribution flattens, so unlikely tokens get picked more often.';
+    if (P < 1) msg += ' top_p ' + P.toFixed(2) + ' keeps ' + kept + ' of ' + TOKENS.length + ' tokens and samples only from those.';
+    document.getElementById('labNote').textContent = msg;
+  }
+  tempEl.addEventListener('input', render);
+  toppEl.addEventListener('input', render);
+  render();
+
+  show(0);
+})();
+</script>
+</body>
+</html>

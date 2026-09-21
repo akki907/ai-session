@@ -1,0 +1,21 @@
+[project]
+name = "it-support-multi-agent"
+version = "0.1.0"
+description = "End-to-end IT support multi-agent system (Day 7 capstone)"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "openai>=1.51.0",
+    "langgraph>=0.2.0",
+    "langchain-openai>=0.2.0",
+    "pydantic>=2.9.0",
+    "langfuse>=2.50.0",
+    "tenacity>=9.0.0",
+    "pyyaml>=6.0.2",
+    "chromadb>=0.5.0",
+    "pytest>=8.0.0",
+]
+
+[tool.uv]
+package = false

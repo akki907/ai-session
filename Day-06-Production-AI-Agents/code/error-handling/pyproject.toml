@@ -1,0 +1,9 @@
+[project]
+name = "error_handling"
+version = "0.1.0"
+description = "Day demo — see ../README and ../hands-on.md"
+requires-python = ">=3.12"
+dependencies = [
+    "tenacity>=8.2.0",
+]
+

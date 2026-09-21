@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 3 · RAG</title>
+<style>
+  /* ------------------------------------------------------------------
+     Day 3 design system (mirrors Day-01). Six pastel section tokens,
+     serif headings on a paper background, system font stacks.
+     Section colours are reused for the chip, progress block, agenda and
+     border accents so colour always carries meaning.
+     ------------------------------------------------------------------ */
+  :root {
+    --paper: #F4F6FB;
+    --surface: #FFFFFF;
+    --ink: #151D35;
+    --muted: #56617C;
+    --rule: #D5DBE8;
+    --focus: #2B3FE0;
+
+    --c0: #E2E7F1; --c0i: #33405E;   /* overview / recap */
+    --c1: #C6EBD8; --c1i: #0C5B3B;   /* foundations */
+    --c2: #DAD3FB; --c2i: #3A2A9C;   /* training & context */
+    --c3: #F8D3DB; --c3i: #8B1D39;   /* limitations */
+    --c4: #CDE4FB; --c4i: #0E4C8C;   /* prompting */
+    --c5: #F7EAAE; --c5i: #674F00;   /* output & safety */
+
+    --code-bg: #101828;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: "Avenir Next", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Liberation Mono", monospace;
+  }
+  .c0 { --bg: var(--c0); --fg: var(--c0i); }
+  .c1 { --bg: var(--c1); --fg: var(--c1i); }
+  .c2 { --bg: var(--c2); --fg: var(--c2i); }
+  .c3 { --bg: var(--c3); --fg: var(--c3i); }
+  .c4 { --bg: var(--c4); --fg: var(--c4i); }
+  .c5 { --bg: var(--c5); --fg: var(--c5i); }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--paper); color: var(--ink);
+    font-family: var(--sans); overflow: hidden; }
+
+  /* ---------- slide frame ---------- */
+  .deck { width: 100vw; height: 100vh; position: relative; }
+  .slide { position: absolute; inset: 0; display: none; overflow-y: auto;
+    padding: 36px clamp(20px, 6vw, 88px) 88px; }
+  .slide.active { display: block; }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+
+  .sec, .tag { display: inline-block; background: var(--bg); color: var(--fg);
+    font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
+  .sec { margin-bottom: 14px; }
+
+  /* ---------- type ---------- */
+  h1, h2, h3 { font-family: var(--serif); color: var(--ink); }
+  h2 { font-size: clamp(28px, 3.4vw, 42px); line-height: 1.12; font-weight: 600;
+    letter-spacing: -0.01em; margin-bottom: 18px; max-width: 34ch; }
+  h2.wide { max-width: none; }
+  h3 { font-size: 19px; font-weight: 600; margin: 16px 0 6px; }
+  p { font-size: 18px; line-height: 1.6; margin-bottom: 10px; max-width: 70ch; }
+  ul, ol { font-size: 17px; line-height: 1.6; padding-left: 22px; margin-bottom: 12px; max-width: 70ch; }
+  li { margin-bottom: 6px; }
+  .muted { color: var(--muted); }
+  code { background: #E6EAF4; color: var(--ink); padding: 1px 6px; border-radius: 4px;
+    font-family: var(--mono); font-size: .88em; }
+
+  /* ---------- code ---------- */
+  pre { background: var(--code-bg); color: #DCE3F5; border-radius: 8px;
+    padding: 18px 22px; overflow-x: auto; font-family: var(--mono);
+    font-size: 14px; line-height: 1.6; margin: 12px 0; }
+  pre .kw  { color: #C4B5FD; }
+  pre .str { color: #8EE6B8; }
+  pre .com { color: #7C89A8; font-style: italic; }
+  pre .num { color: #F5D66B; }
+  pre .fn  { color: #8CC8FF; }
+  pre strong { color: #F5D66B; }
+
+  /* ---------- tables: ruled, not boxed ---------- */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 15px; }
+  th { text-align: left; font-size: 13px; font-weight: 700; color: var(--muted);
+    padding: 8px 16px 8px 0; border-bottom: 2px solid var(--ink); }
+  td { padding: 10px 16px 10px 0; border-bottom: 1px solid var(--rule);
+    vertical-align: top; line-height: 1.45; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+  td.wrapfirst:first-child, table.wrapfirst td:first-child { white-space: normal; }
+  td .sub { display: block; color: var(--muted); font-weight: 400; font-size: 13.5px; margin-top: 2px; }
+  th.bad { color: var(--c3i); } th.good { color: var(--c1i); }
+
+  /* ---------- layout helpers ---------- */
+  .grid { display: grid; gap: 22px 28px; }
+  .grid > pre { margin: 0; align-self: start; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: repeat(3, 1fr); }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .g-split { grid-template-columns: minmax(280px, 0.9fr) 1.4fr; align-items: start; }
+  .col { border-top: 3px solid var(--fg, var(--ink)); padding-top: 10px; }
+  .col h3 { margin-top: 0; font-size: 18px; }
+  .col p { font-size: 15px; color: var(--muted); margin: 0; line-height: 1.5; }
+  .col ul { font-size: 15px; line-height: 1.55; color: var(--ink); padding-left: 18px; }
+  .col ul li { margin-bottom: 4px; }
+  .col table { margin: 0; }
+
+  /* ---------- notes (replace gradient call-outs) ---------- */
+  .note { background: #E4EDFA; border-radius: 6px; padding: 12px 16px; margin: 14px 0;
+    font-size: 15.5px; line-height: 1.55; max-width: 100%; }
+  .note.good { background: #DDF3E8; }
+  .note.warn { background: #FBE3E8; }
+  .note strong { color: var(--ink); }
+
+  /* ---------- nested hierarchy ---------- */
+  .nest { position: relative; padding: 32px 14px 14px; border: 1.5px solid var(--rule); }
+  .nest > .lbl { position: absolute; top: 8px; left: 14px; font-weight: 700; font-size: 14px; }
+  .n1 { background: #EEF1F8; border-radius: 16px; }
+  .n2 { background: #E2E7F5; border-radius: 13px; }
+  .n3 { background: #D5DDF2; border-radius: 10px; }
+  .n4 { background: #C7D2EE; border-radius: 8px; }
+  .n5 { background: var(--c1); border-color: var(--c1i); border-radius: 6px; color: var(--c1i);
+    padding: 30px 14px 16px; min-height: 60px; }
+
+  /* ---------- pipeline (transformer) ---------- */
+  .pipe { list-style: none; padding: 0 0 0 26px; position: relative; max-width: none; }
+  .pipe::before { content: ""; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: var(--rule); }
+  .pipe li { position: relative; margin: 0 0 14px; font-size: 16px; line-height: 1.45; }
+  .pipe li::before { content: ""; position: absolute; left: -26px; top: 5px; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--bg); border: 2px solid var(--fg); }
+  .pipe b { display: block; font-size: 16px; }
+  .pipe span { color: var(--muted); font-size: 14.5px; }
+
+  /* ---------- prompt anatomy ---------- */
+  .anat { display: grid; grid-template-columns: 96px 1fr; gap: 10px 14px; align-items: center; }
+  .anat .tag { text-align: center; }
+  .anat div.d { font-size: 15.5px; }
+
+  /* ---------- agenda ---------- */
+  .tl { display: flex; gap: 3px; height: 46px; margin: 8px 0 22px; }
+  .tl div { display: flex; align-items: center; padding: 0 10px; border-radius: 4px;
+    background: var(--bg); color: var(--fg); font-weight: 700; font-size: 14px;
+    overflow: hidden; white-space: nowrap; }
+  .ag { display: grid; grid-template-columns: 190px 1fr 70px; gap: 16px; align-items: center;
+    padding: 11px 0; border-bottom: 1px solid var(--rule); }
+  .ag .sec { margin: 0; justify-self: start; }
+  .ag .t { text-align: right; font-weight: 700; font-family: var(--mono); font-size: 14px; }
+
+  /* ---------- temperature lab ---------- */
+  .lab { background: var(--surface); border: 1.5px solid var(--ink); border-radius: 10px; padding: 18px 22px; margin: 6px 0 12px; }
+  .lab .prompt { font-family: var(--mono); font-size: 16px; margin-bottom: 14px; }
+  .lab .prompt b { background: var(--c4); color: var(--c4i); padding: 1px 8px; border-radius: 4px; }
+  .ctrls { display: flex; gap: 40px; flex-wrap: wrap; margin-bottom: 16px; }
+  .ctrls label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 14px; min-width: 250px; flex: 1; }
+  .ctrls output { font-family: var(--mono); font-weight: 400; color: var(--muted); margin-left: 8px; }
+  input[type=range] { width: 100%; accent-color: var(--ink); }
+  .bar-row { display: grid; grid-template-columns: 130px 1fr 130px; gap: 14px; align-items: center; margin: 7px 0; font-size: 14px; }
+  .bar-row .tok { font-family: var(--mono); }
+  .bar-row .tok i { color: var(--muted); font-style: normal; margin-left: 6px; }
+  .bar-track { height: 22px; background: #EDF0F7; border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--c4i); border-radius: 4px; transition: width .15s ease; }
+  .bar-row.cut .bar-fill { background: #B6BDCF; }
+  .bar-row.cut { color: var(--muted); }
+  .bar-row .pct { font-family: var(--mono); text-align: right; }
+  .lab-note { font-size: 15px; color: var(--muted); margin: 10px 0 0; min-height: 44px; }
+
+  /* ---------- recap questions ---------- */
+  details { border-top: 1px solid var(--rule); padding: 11px 0; }
+  details:last-of-type { border-bottom: 1px solid var(--rule); }
+  summary { cursor: pointer; font-weight: 600; font-size: 16px; line-height: 1.4; }
+  details[open] summary { color: var(--c4i); }
+  details p { font-size: 15px; color: var(--muted); margin: 8px 0 0; }
+
+  /* ---------- title slide: the one memorable moment ---------- */
+  .slide.title-slide.active { display: flex; flex-direction: column; justify-content: center; }
+  .title-slide .wrap { width: 100%; }
+  .title-slide h1 { font-size: clamp(52px, 10vw, 128px); line-height: 1.02; font-weight: 600;
+    letter-spacing: -0.02em; margin: 26px 0 62px; white-space: pre-wrap; }
+  .title-slide .tk { position: relative; display: inline-block; padding: 0 .1em; margin-right: .06em;
+    border-radius: 10px; opacity: 0; transform: translateY(10px);
+    animation: tokin .55s cubic-bezier(.2,.7,.2,1) forwards; animation-delay: calc(var(--i) * .22s + .1s); }
+  .title-slide .tk::after { content: attr(data-id); position: absolute; left: 0; right: 0; bottom: -1.5em;
+    text-align: center; font-family: var(--mono); font-size: 15px; letter-spacing: 0; font-weight: 400;
+    color: var(--muted); opacity: 0; animation: idin .4s ease forwards; animation-delay: calc(var(--i) * .22s + .5s); }
+  .title-slide .tk.a { background: var(--c1); } .title-slide .tk.b { background: var(--c2); } .title-slide .tk.c { background: var(--c4); }
+  .title-slide .lede { font-size: 20px; color: var(--muted); max-width: 46ch; }
+  .title-slide .fine { font-size: 14px; color: var(--muted); }
+  @keyframes tokin { to { opacity: 1; transform: none; } }
+  @keyframes idin { to { opacity: 1; } }
+
+  /* ---------- controls ---------- */
+  .controls { position: fixed; left: 0; right: 0; bottom: 0; height: 56px; background: var(--paper);
+    border-top: 1px solid var(--rule); display: flex; align-items: center; gap: 16px;
+    padding: 0 clamp(16px, 3vw, 32px); z-index: 100; }
+  .btn { background: transparent; border: 1.5px solid var(--ink); color: var(--ink);
+    padding: 6px 14px; border-radius: 6px; font: 600 14px var(--sans); cursor: pointer; }
+  .btn:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+  .strip { display: flex; gap: 3px; flex: 1; align-items: center; height: 24px; }
+  .blk { flex: 1; height: 10px; border-radius: 2px; background: var(--rule); border: 0; padding: 0;
+    cursor: pointer; transition: height .15s ease, background .15s ease; }
+  .blk.seen { background: var(--bg); }
+  .blk.on { background: var(--fg); height: 20px; }
+  .counter { font-family: var(--mono); font-size: 13px; color: var(--muted); min-width: 60px; text-align: center; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  @media (max-width: 900px) {
+    .g2, .g3, .g4, .g-split { grid-template-columns: 1fr; }
+    .ag { grid-template-columns: 1fr 60px; }
+    .ag .d { grid-column: 1 / -1; order: 3; }
+    .bar-row { grid-template-columns: 90px 1fr 90px; }
+    .counter, .fs { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .title-slide .tk, .title-slide .tk::after { animation: none; opacity: 1; transform: none; }
+    .blk, .bar-fill { transition: none; }
+  }
+
+
+  /* ---------- Cross-deck component retune (dark → Day-01 tokens) ---------- */
+  .callout {
+    background: #E4EDFA; border-radius: 6px; padding: 12px 16px; margin: 12px 0;
+    font-size: 15.5px; line-height: 1.55; max-width: 100%;
+  }
+  .callout.good { background: #DDF3E8; }
+  .callout.warn { background: #FBE3E8; }
+  .callout strong { color: var(--ink); }
+  .callout b { color: var(--ink); }
+
+  .diagram {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 22px; margin: 14px 0;
+  }
+  .diagram-row { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+
+  .node {
+    background: var(--bg); color: var(--fg);
+    border: 1.5px solid var(--fg); border-radius: 8px;
+    padding: 10px 16px; font-weight: 600; font-size: 14px;
+    min-width: 110px; text-align: center;
+  }
+  .node.alt    { --bg: var(--c2); --fg: var(--c2i); background: var(--c2); color: var(--c2i); border-color: var(--c2i); }
+  .node.pink   { --bg: var(--c3); --fg: var(--c3i); background: var(--c3); color: var(--c3i); border-color: var(--c3i); }
+  .node.yellow { --bg: var(--c4); --fg: var(--c4i); background: var(--c4); color: var(--c4i); border-color: var(--c4i); }
+  .node.gray   { --bg: #EEF1F8; --fg: var(--muted); background: #EEF1F8; color: var(--muted); border-color: var(--rule); }
+
+  .arrow       { font-size: 22px; color: var(--ink); font-weight: 700; }
+  .arrow-row   { font-size: 18px; color: var(--ink); }
+
+  .steps { counter-reset: step; }
+  .steps li {
+    counter-increment: step; list-style: none;
+    padding-left: 36px; position: relative; margin-bottom: 10px;
+  }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--c1); color: var(--c1i);
+    border: 1.5px solid var(--c1i);
+    font-weight: 700; display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+
+  .qa { display: grid; gap: 10px; }
+  .qa-item { background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 12px 16px; }
+  .qa-item .q { color: var(--c2i); font-weight: 600; margin-bottom: 4px; }
+  .qa-item .a { color: var(--muted); font-size: 14px; }
+
+  .section-grid { display: grid; gap: 10px; }
+  .section-grid .item {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 10px 16px; display: flex;
+    align-items: center; gap: 14px;
+  }
+  .section-grid .num {
+    background: var(--c1); color: var(--c1i);
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; flex-shrink: 0;
+  }
+  .section-grid .name { font-weight: 600; }
+  .section-grid .time { margin-left: auto; color: var(--muted); font-size: 13px; font-family: var(--mono); }
+
+  kbd { background: #E6EAF4; color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 4px; padding: 2px 6px;
+    font-family: var(--mono); font-size: 12px; }
+
+  .slide > * { max-width: 1180px; width: 100%; }
+  .slide .wrap { width: 100%; }
+
+  .grid > .card { border-top: 3px solid var(--fg, var(--ink)); padding-top: 10px;
+    background: transparent; border-radius: 0; }
+  .grid > .card h3 { margin-top: 0; font-size: 18px; }
+  .grid > .card p { font-size: 15px; color: var(--muted); margin: 0; line-height: 1.5; }
+  .card { background: transparent; }
+
+  .grid       { display: grid; gap: 22px 28px; }
+  .grid-2     { grid-template-columns: 1fr 1fr; }
+  .grid-3     { grid-template-columns: repeat(3, 1fr); }
+  .grid-4     { grid-template-columns: repeat(4, 1fr); }
+
+  pre code { background: transparent; color: inherit; padding: 0; font-size: inherit; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+<section class="slide title-slide active"><div class="wrap">
+  <span class="tag c0">Day 3</span>
+  <h1 aria-label="Agent Architecture & RAG"><span class="tk a" style="--i:0">Agent</span><span class="tk b" style="--i:1">Architecture</span><span class="tk c" style="--i:2">& RAG</span></h1>
+  <p class="lede">From a loop to a system — building blocks, guardrails, and grounding answers in your data.</p>
+  <p class="fine">⏱ 45 minutes · 🎯 Hands-on included · Builds on prior days.</p>
+</div></section>
+<section class="slide" data-sec="Overview" data-c="0"><div class="wrap">
+  
+<h2>What You Will Learn</h2>
+<div class="grid grid-2">
+  <div class="card"><h3>The 9 Building Blocks</h3><p>LLM, Tools, State, Memory, Planning, Reasoning, Context, Guardrails, HITL.</p></div>
+  <div class="card"><h3>Memory Types</h3><p>Short-term, long-term, episodic, procedural.</p></div>
+  <div class="card"><h3>Guardrails</h3><p>Input + output filtering, policy enforcement.</p></div>
+  <div class="card"><h3>Human-in-the-Loop</h3><p>Approve before writes, escalation, audit.</p></div>
+  <div class="card"><h3>RAG</h3><p>Chunking, embeddings, vector DBs, retrieval.</p></div>
+  <div class="card"><h3>RAG + Agents</h3><p>Retrieval as a tool the agent can call.</p></div>
+</div>
+</div></section>
+<section class="slide" data-sec="Agenda" data-c="0"><div class="wrap">
+  
+<h2>Today's 45 Minutes</h2>
+<div class="section-grid">
+  <div class="item"><div class="num">1</div><div class="name">Recap + architecture</div><div class="time">5 min</div></div>
+  <div class="item"><div class="num">2</div><div class="name">9 building blocks, memory, guardrails, HITL</div><div class="time">15 min</div></div>
+  <div class="item"><div class="num">3</div><div class="name">RAG end-to-end</div><div class="time">15 min</div></div>
+  <div class="item"><div class="num">4</div><div class="name">Project: Policy-Aware Helpdesk</div><div class="time">5 min</div></div>
+  <div class="item"><div class="num">5</div><div class="name">Q&amp;A</div><div class="time">5 min</div></div>
+</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>Why RAG?</h2>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>LLM Alone</h3>
+    <ul>
+      <li>Trained on public data</li>
+      <li>Knowledge cutoff</li>
+      <li>Hallucinates facts</li>
+      <li>No company context</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>LLM + RAG</h3>
+    <ul>
+      <li>Grounded in your docs</li>
+      <li>Up-to-date</li>
+      <li>Cites sources</li>
+      <li>Verifiable answers</li>
+    </ul>
+  </div>
+</div>
+<div class="callout good" style="margin-top:14px;"><strong>RAG = look it up, then answer.</strong> The model becomes a reader, not an oracle.</div>
+</div></section>
+<section class="slide" data-sec="Architecture" data-c="2"><div class="wrap">
+  
+<h2>RAG Pipeline</h2>
+<div class="diagram">
+  <div class="diagram-row">
+    <div class="node">Documents</div>
+    <div class="arrow">→</div>
+    <div class="node alt">Chunker</div>
+    <div class="arrow">→</div>
+    <div class="node pink">Embedder</div>
+    <div class="arrow">→</div>
+    <div class="node yellow">Vector DB</div>
+  </div>
+  <div class="arrow-row">↓ at query time</div>
+  <div class="diagram-row">
+    <div class="node">User Query</div>
+    <div class="arrow">→</div>
+    <div class="node alt">Embed</div>
+    <div class="arrow">→</div>
+    <div class="node pink">Top-k Search</div>
+    <div class="arrow">→</div>
+    <div class="node yellow">LLM + Context</div>
+  </div>
+  <div class="arrow-row">↓</div>
+  <div class="node">Grounded Answer</div>
+</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>Chunking, Embeddings, Vector DBs</h2>
+<table>
+  <tr><th>Strategy</th><th>Best for</th></tr>
+  <tr><td><b>Fixed size</b> (500 chars)</td><td>Uniform docs</td></tr>
+  <tr><td><b>By paragraph</b></td><td>Articles</td></tr>
+  <tr><td><b>By section</b></td><td>Manuals, policies</td></tr>
+  <tr><td><b>Semantic</b></td><td>Mixed content</td></tr>
+  <tr><td><b>Sliding window</b></td><td>Long context</td></tr>
+</table>
+<div class="callout"><strong>Rule of thumb:</strong> 200–800 tokens, 10–20% overlap.</div>
+<div class="grid grid-2" style="margin-top:14px;">
+  <div class="card"><h3>Embeddings</h3><p>Text → fixed-length vector. Similar text → similar vectors.</p></div>
+  <div class="card"><h3>Vector DBs</h3><p>pgvector · Pinecone · Weaviate · Chroma · Qdrant</p></div>
+</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>Metadata Filtering &amp; RAG vs Fine-tuning</h2>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Metadata Filtering</h3>
+    <p>Store metadata with each chunk for pre-retrieval filtering.</p>
+    <pre style="margin-top:8px;">{
+  "text": "All full-time employees...",
+  "metadata": {
+    "source": "hr-handbook.pdf",
+    "section": "Leave Policy",
+    "department": "All",
+    "effective_date": "2024-01-01"
+  }
+}</pre>
+  </div>
+  <div class="card">
+    <h3>RAG vs Fine-tuning</h3>
+    <table>
+      <tr><th></th><th>RAG</th><th>Fine-tune</th></tr>
+      <tr><td>Cost</td><td>Low</td><td>High</td></tr>
+      <tr><td>Update</td><td>Instant</td><td>Retrain</td></tr>
+      <tr><td>Verifiable</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Best for</td><td>Knowledge</td><td>Style / format</td></tr>
+    </table>
+    <div class="callout good" style="margin-top:8px;"><strong>Default to RAG.</strong></div>
+  </div>
+</div>
+</div></section>
+<section class="slide" data-sec="Code" data-c="3"><div class="wrap">
+  
+<h2>Minimal RAG in 20 Lines</h2>
+<pre><span class="kw">import</span> chromadb
+<span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+
+client = OpenAI()
+chroma = chromadb.PersistentClient(path=<span class="str">"./db"</span>)
+col    = chroma.get_or_create_collection(<span class="str">"policies"</span>)
+
+<span class="kw">def</span> <span class="fn">ingest</span>(text, meta):
+    emb = client.embeddings.create(
+        model=<span class="str">"text-embedding-3-small"</span>,
+        input=text).data[<span class="num">0</span>].embedding
+    col.add(documents=[text], embeddings=[emb],
+            metadatas=[meta], ids=[meta[<span class="str">"chunk_id"</span>]])
+
+<span class="kw">def</span> <span class="fn">ask</span>(q, k=<span class="num">5</span>):
+    qe = client.embeddings.create(
+        model=<span class="str">"text-embedding-3-small"</span>, input=q
+    ).data[<span class="num">0</span>].embedding
+    res = col.query(query_embeddings=[qe], n_results=k)
+    ctx = <span class="str">"
+
+"</span>.join(res[<span class="str">"documents"</span>][<span class="num">0</span>])
+    prompt = <span class="str">f"Answer using ONLY:
+
+{ctx}
+
+Q: {q}
+A:"</span>
+    <span class="kw">return</span> client.chat.completions.create(
+        model=<span class="str">"gpt-4o-mini"</span>,
+        messages=[{<span class="str">"role"</span>:<span class="str">"user"</span>,<span class="str">"content"</span>:prompt}]
+    ).choices[<span class="num">0</span>].message.content
+</pre>
+</div></section>
+<section class="slide" data-sec="Code" data-c="3"><div class="wrap">
+  
+<h2>RAG as an Agent Tool</h2>
+<pre>TOOLS = [
+    {<span class="str">"type"</span>: <span class="str">"function"</span>, <span class="str">"function"</span>: {
+        <span class="str">"name"</span>: <span class="str">"search_hr_policy"</span>,
+        <span class="str">"description"</span>: <span class="str">"Search HR policies"</span>,
+        <span class="str">"parameters"</span>: {
+            <span class="str">"type"</span>: <span class="str">"object"</span>,
+            <span class="str">"properties"</span>: {<span class="str">"q"</span>: {<span class="str">"type"</span>: <span class="str">"string"</span>}
+        }
+    },
+    <span class="com"># ... get_employee, create_ticket ...</span>
+]
+
+<span class="kw">def</span> <span class="fn">search_hr_policy</span>(q: str) -> str:
+    <span class="com"># Same RAG logic as before, but as a tool</span>
+    qe = client.embeddings.create(
+        model=<span class="str">"text-embedding-3-small"</span>, input=q
+    ).data[<span class="num">0</span>].embedding
+    res = col.query(query_embeddings=[qe], n_results=<span class="num">5</span>)
+    <span class="kw">return</span> json.dumps(res[<span class="str">"documents"</span>][<span class="num">0</span>])
+</pre>
+<div class="callout good">The agent decides when to call <code>search_hr_policy</code> based on the user's question.</div>
+</div></section>
+<section class="slide" data-sec="Hands-on" data-c="4"><div class="wrap">
+  
+<h2>Hands-on (15 min)</h2>
+<ol class="steps">
+  <li>Open <code>code/day2_architecture.py</code> — multi-tool helpdesk.</li>
+  <li>Add 3 tools: <code>search_hr_policy</code>, <code>get_employee</code>, <code>create_ticket</code>.</li>
+  <li>Mark <code>create_ticket</code> as sensitive — require human approval.</li>
+  <li>Add an input guardrail: block any message with "salary".</li>
+  <li>Add an output guardrail: validate that the final response is valid JSON.</li>
+  <li>Then run <code>code/day2_rag.py</code> — ingest sample policies and query them.</li>
+  <li>Bonus: wire <code>search_hr_policy</code> as a tool in the agent.</li>
+</ol>
+</div></section>
+</div>
+<div class="controls">
+  <button class="btn" id="prev" title="Previous (←)">Back</button>
+  <button class="btn" id="next" title="Next (→ or space)">Next</button>
+  <div class="strip" id="strip" role="tablist" aria-label="Slides"></div>
+  <div class="counter"><span id="cur">1</span> / <span id="total"></span></div>
+  <button class="btn fs" id="fs" title="Fullscreen (F)">Fullscreen</button>
+</div>
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var idx = 0;
+  var strip = document.getElementById('strip');
+  document.getElementById('total').textContent = total;
+
+  // Section chip on every content slide + one progress block per slide
+  var blocks = slides.map(function (s, n) {
+    var c = s.getAttribute('data-c') || '0';
+    var name = s.getAttribute('data-sec');
+    if (name) {
+      var chip = document.createElement('span');
+      chip.className = 'sec c' + c;
+      chip.textContent = name;
+      s.querySelector('.wrap').insertBefore(chip, s.querySelector('.wrap').firstChild);
+    }
+    var b = document.createElement('button');
+    b.className = 'blk c' + c;
+    var h = s.querySelector('h2');
+    b.title = (n + 1) + '. ' + (h ? h.textContent : 'Title');
+    b.setAttribute('aria-label', 'Go to slide ' + (n + 1));
+    b.onclick = function () { show(n); };
+    strip.appendChild(b);
+    return b;
+  });
+
+  function show(i) {
+    i = Math.max(0, Math.min(total - 1, i));
+    slides.forEach(function (s, n) { s.classList.toggle('active', n === i); });
+    blocks.forEach(function (b, n) {
+      b.classList.toggle('on', n === i);
+      b.classList.toggle('seen', n < i);
+    });
+    slides[i].scrollTop = 0;
+    document.getElementById('cur').textContent = i + 1;
+    document.getElementById('prev').disabled = i === 0;
+    document.getElementById('next').disabled = i === total - 1;
+    idx = i;
+  }
+
+  function toggleFs() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+
+  document.getElementById('prev').onclick = function () { show(idx - 1); };
+  document.getElementById('next').onclick = function () { show(idx + 1); };
+  document.getElementById('fs').onclick = toggleFs;
+
+  document.addEventListener('keydown', function (e) {
+    var t = e.target && e.target.tagName;
+    if (t === 'INPUT' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return; // let sliders use arrows
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || (e.key === ' ' && t !== 'SUMMARY' && t !== 'BUTTON')) { e.preventDefault(); show(idx + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(idx - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); show(0); }
+    else if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+    else if ((e.key === 'f' || e.key === 'F') && t !== 'INPUT') { toggleFs(); }
+  });
+
+  /* ---------- temperature / top_p lab ---------- */
+  var TOKENS = [['mat', 2.0], ['floor', 1.5], ['sofa', 1.0], ['roof', 0.5], ['moon', 0.1]];
+  var barsEl = document.getElementById('bars');
+  var tempEl = document.getElementById('temp');
+  var toppEl = document.getElementById('topp');
+  var rows = TOKENS.map(function (t) {
+    var row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = '<div class="tok">' + t[0] + '<i>logit ' + t[1].toFixed(1) + '</i></div>' +
+      '<div class="bar-track"><div class="bar-fill"></div></div><div class="pct"></div>';
+    barsEl.appendChild(row);
+    return row;
+  });
+
+  function probs(T) {
+    if (T <= 0) return TOKENS.map(function (_, i) { return i === 0 ? 1 : 0; });
+    var ex = TOKENS.map(function (t) { return Math.exp(t[1] / T); });
+    var s = ex.reduce(function (a, b) { return a + b; }, 0);
+    return ex.map(function (e) { return e / s; });
+  }
+
+  function render() {
+    var T = parseFloat(tempEl.value), P = parseFloat(toppEl.value);
+    document.getElementById('tOut').textContent = T.toFixed(1);
+    document.getElementById('pOut').textContent = P.toFixed(2);
+    var pr = probs(T);
+    var order = pr.map(function (p, i) { return [p, i]; }).sort(function (a, b) { return b[0] - a[0]; });
+    var keep = {}, cum = 0;
+    for (var k = 0; k < order.length; k++) {
+      keep[order[k][1]] = true; cum += order[k][0];
+      if (cum >= P - 1e-9) break;
+    }
+    var kept = Object.keys(keep).length;
+    rows.forEach(function (row, i) {
+      row.classList.toggle('cut', !keep[i]);
+      row.querySelector('.bar-fill').style.width = (pr[i] * 100).toFixed(1) + '%';
+      row.querySelector('.pct').textContent = keep[i]
+        ? (pr[i] / cum * 100).toFixed(0) + '% chance'
+        : 'excluded';
+    });
+    var msg;
+    if (T === 0) msg = 'Temperature 0: always pick the highest-scoring token.';
+    else if (T < 0.6) msg = 'Low temperature: the distribution is sharp, so the top token wins almost every time.';
+    else if (T <= 1.1) msg = 'Around 1: the model\u2019s own probabilities, so you get natural variety.';
+    else msg = 'High temperature: the distribution flattens, so unlikely tokens get picked more often.';
+    if (P < 1) msg += ' top_p ' + P.toFixed(2) + ' keeps ' + kept + ' of ' + TOKENS.length + ' tokens and samples only from those.';
+    document.getElementById('labNote').textContent = msg;
+  }
+  tempEl.addEventListener('input', render);
+  toppEl.addEventListener('input', render);
+  render();
+
+  show(0);
+})();
+</script>
+</body>
+</html>

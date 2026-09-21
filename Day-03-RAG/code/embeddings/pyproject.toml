@@ -1,0 +1,11 @@
+[project]
+name = "embeddings"
+version = "0.1.0"
+description = "Day demo — see ../README and ../hands-on.md"
+requires-python = ">=3.12"
+dependencies = [
+    "openai>=1.40.0",
+    "numpy>=1.26.0",
+    "python-dotenv>=1.0.1",
+]
+

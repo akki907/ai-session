@@ -1,0 +1,56 @@
+# ─── Python ────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+wheels/
+
+# ─── uv (virtual envs + lock files) ────────────────────────────────────
+# One .venv per code dir; they're large and reproducible from pyproject.toml.
+.venv/
+venv/
+env/
+ENV/
+
+# Lock files are intentionally NOT committed in this training repo so
+# trainees always resolve fresh against the live package index. If you
+# want reproducible builds, commit uv.lock instead.
+# uv.lock
+
+# ─── Secrets / local config ────────────────────────────────────────────
+# Real credentials (.env) — keep .env.example tracked.
+.env
+.env.*
+!.env.example
+
+# ─── Editor / IDE ──────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Tooling caches ────────────────────────────────────────────────────
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.cache/
+
+# ─── Project-specific (ai-agents-training) ─────────────────────────────
+# Trainees sometimes drop local scratch files; keep the tree tidy.
+*.log
+*.tmp
+scratch/
+notes.local.md

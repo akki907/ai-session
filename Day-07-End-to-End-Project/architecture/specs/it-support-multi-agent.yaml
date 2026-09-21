@@ -1,0 +1,85 @@
+# Agent Spec — IT Support Multi-Agent System (Day 6 capstone)
+
+id: agent-it-support-multi
+version: 1.0.0
+description: |
+  Multi-agent IT support system. Planner dispatches to Knowledge, Ticket,
+  and Escalation agents. Reviewer validates output. Create_ticket requires
+  human approval (HITL).
+
+model:
+  provider: azure
+  name: gpt-4o
+  temperature: 0.2
+  max_tokens: 4000
+
+agents:
+  - id: planner
+    role: "Decompose user query into sub-tasks"
+    tools: []
+  - id: knowledge
+    role: "Retrieve relevant policies via RAG"
+    tools: [search_docs]
+  - id: ticket
+    role: "Read or create Jira tickets"
+    tools: [get_ticket_status, create_ticket]
+  - id: escalation
+    role: "Route critical issues to on-call human"
+    tools: [escalate_to_human]
+  - id: reviewer
+    role: "Validate final response for accuracy and safety"
+    tools: []
+
+tools:
+  - name: search_docs
+    mcp_server: docs-mcp
+    version: "1.0.0"
+  - name: get_ticket_status
+    mcp_server: jira-mcp
+    version: "2.1.0"
+  - name: create_ticket
+    mcp_server: jira-mcp
+    version: "2.1.0"
+    requires_approval: true          # HITL gate
+    approvers: [it-managers]
+  - name: escalate_to_human
+    mcp_server: pagerduty-mcp
+    version: "1.0.0"
+
+rag:
+  collections:
+    - name: it-policies
+      top_k: 5
+      min_score: 0.7
+    - name: hr-policies
+      top_k: 3
+      min_score: 0.7
+
+guardrails:
+  input:
+    - pii_redaction
+    - prompt_injection_detection
+    - topic_block: [salary, ssn, credit_card]
+  output:
+    - json_schema_validation
+    - toxicity_filter
+    - pii_redaction
+
+hitl:
+  approve_before:
+    - create_ticket
+  approval_timeout_seconds: 3600
+  escalation_on_timeout: it-managers
+
+limits:
+  max_iterations: 10
+  max_tokens_per_run: 50000
+  timeout_seconds: 120
+  budget_usd_per_run: 0.10
+  budget_usd_per_user_per_day: 5.00
+
+observability:
+  trace_to: [langfuse, otel]
+  sample_rate: 1.0
+  capture_prompts: true
+  capture_responses: true

@@ -1,0 +1,11 @@
+IT Support Handbook v2.1
+
+Section 3.4 - Password Reset
+Use the self-service portal at password.company.com.
+If MFA is locked, contact IT helpdesk.
+
+Section 3.5 - Hardware Request
+Submit a ticket via the IT portal. Approval typically takes 2 business days.
+
+Section 3.6 - VPN Access
+New employees are issued VPN credentials on day one.

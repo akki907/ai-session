@@ -1,0 +1,10 @@
+[project]
+name = "retrieval"
+version = "0.1.0"
+description = "Day demo — see ../README and ../hands-on.md"
+requires-python = ">=3.12"
+dependencies = [
+    "openai>=1.40.0",
+    "chromadb>=0.4.22",
+]
+
