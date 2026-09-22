@@ -3,10 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Day 2 · AI Agents & Architecture</title>
+<title>Day 2 · AI Agents &amp; Architecture</title>
 <style>
-  /* Day-02 presentation restyled with the Day-01 design system.
-     Day-02 content is preserved; the visual language now matches Day-01. */
 :root {
     --paper: #F4F6FB;
     --surface: #FFFFFF;
@@ -38,7 +36,6 @@
   html, body { height: 100%; background: var(--paper); color: var(--ink);
     font-family: var(--sans); overflow: hidden; }
 
-  /* ---------- slide frame ---------- */
   .deck { width: 100vw; height: 100vh; position: relative; }
   .slide { position: absolute; inset: 0; display: none; overflow-y: auto;
     padding: 36px clamp(20px, 6vw, 88px) 88px; }
@@ -49,7 +46,6 @@
     font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 4px; }
   .sec { margin-bottom: 14px; }
 
-  /* ---------- type ---------- */
   h1, h2, h3 { font-family: var(--serif); color: var(--ink); }
   h2 { font-size: clamp(28px, 3.4vw, 42px); line-height: 1.12; font-weight: 600;
     letter-spacing: -0.01em; margin-bottom: 18px; max-width: 34ch; }
@@ -62,7 +58,6 @@
   code { background: #E6EAF4; color: var(--ink); padding: 1px 6px; border-radius: 4px;
     font-family: var(--mono); font-size: .88em; }
 
-  /* ---------- code ---------- */
   pre { background: var(--code-bg); color: #DCE3F5; border-radius: 8px;
     padding: 18px 22px; overflow-x: auto; font-family: var(--mono);
     font-size: 14px; line-height: 1.6; margin: 12px 0; }
@@ -72,8 +67,8 @@
   pre .num { color: #F5D66B; }
   pre .fn  { color: #8CC8FF; }
   pre strong { color: #F5D66B; }
+  pre code { background: transparent; color: inherit; padding: 0; font-size: inherit; }
 
-  /* ---------- tables: ruled, not boxed ---------- */
   table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 15px; }
   th { text-align: left; font-size: 13px; font-weight: 700; color: var(--muted);
     padding: 8px 16px 8px 0; border-bottom: 2px solid var(--ink); }
@@ -84,87 +79,61 @@
   td .sub { display: block; color: var(--muted); font-weight: 400; font-size: 13.5px; margin-top: 2px; }
   th.bad { color: var(--c3i); } th.good { color: var(--c1i); }
 
-  /* ---------- layout helpers ---------- */
   .grid { display: grid; gap: 22px 28px; }
   .grid > pre { margin: 0; align-self: start; }
-  .g2 { grid-template-columns: 1fr 1fr; }
-  .g3 { grid-template-columns: repeat(3, 1fr); }
-  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
   .g-split { grid-template-columns: minmax(280px, 0.9fr) 1.4fr; align-items: start; }
-  .col { border-top: 3px solid var(--fg, var(--ink)); padding-top: 10px; }
-  .col h3 { margin-top: 0; font-size: 18px; }
-  .col p { font-size: 15px; color: var(--muted); margin: 0; line-height: 1.5; }
-  .col ul { font-size: 15px; line-height: 1.55; color: var(--ink); padding-left: 18px; }
-  .col ul li { margin-bottom: 4px; }
-  .col table { margin: 0; }
+  .card { border-top: 3px solid var(--fg, var(--ink)); padding-top: 10px; background: transparent; }
+  .card h3 { margin-top: 0; font-size: 18px; }
+  .card p { font-size: 15px; color: var(--muted); margin: 0; line-height: 1.5; }
+  .card ul { font-size: 15px; line-height: 1.55; color: var(--ink); padding-left: 18px; }
+  .card ul li { margin-bottom: 4px; }
+  .card table { margin: 0; }
 
-  /* ---------- notes (replace gradient call-outs) ---------- */
-  .note { background: #E4EDFA; border-radius: 6px; padding: 12px 16px; margin: 14px 0;
+  .callout { background: #E4EDFA; border-radius: 6px; padding: 12px 16px; margin: 12px 0;
     font-size: 15.5px; line-height: 1.55; max-width: 100%; }
-  .note.good { background: #DDF3E8; }
-  .note.warn { background: #FBE3E8; }
-  .note strong { color: var(--ink); }
+  .callout.good { background: #DDF3E8; }
+  .callout.warn { background: #FBE3E8; }
+  .callout strong, .callout b { color: var(--ink); }
 
-  /* ---------- nested hierarchy ---------- */
-  .nest { position: relative; padding: 32px 14px 14px; border: 1.5px solid var(--rule); }
-  .nest > .lbl { position: absolute; top: 8px; left: 14px; font-weight: 700; font-size: 14px; }
-  .n1 { background: #EEF1F8; border-radius: 16px; }
-  .n2 { background: #E2E7F5; border-radius: 13px; }
-  .n3 { background: #D5DDF2; border-radius: 10px; }
-  .n4 { background: #C7D2EE; border-radius: 8px; }
-  .n5 { background: var(--c1); border-color: var(--c1i); border-radius: 6px; color: var(--c1i);
-    padding: 30px 14px 16px; min-height: 60px; }
+  .diagram { display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 22px; margin: 14px 0; }
+  .diagram-row { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  .node { background: var(--bg); color: var(--fg); border: 1.5px solid var(--fg); border-radius: 8px;
+    padding: 10px 16px; font-weight: 600; font-size: 14px; min-width: 110px; text-align: center; }
+  .node.alt    { background: var(--c2); color: var(--c2i); border-color: var(--c2i); }
+  .node.pink   { background: var(--c3); color: var(--c3i); border-color: var(--c3i); }
+  .node.yellow { background: var(--c4); color: var(--c4i); border-color: var(--c4i); }
+  .node.green  { background: var(--c1); color: var(--c1i); border-color: var(--c1i); }
+  .node.gray   { background: #EEF1F8; color: var(--muted); border-color: var(--rule); }
+  .arrow       { font-size: 22px; color: var(--ink); font-weight: 700; }
+  .arrow-row   { font-size: 15px; color: var(--muted); text-align: center; }
 
-  /* ---------- pipeline (transformer) ---------- */
-  .pipe { list-style: none; padding: 0 0 0 26px; position: relative; max-width: none; }
-  .pipe::before { content: ""; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: var(--rule); }
-  .pipe li { position: relative; margin: 0 0 14px; font-size: 16px; line-height: 1.45; }
-  .pipe li::before { content: ""; position: absolute; left: -26px; top: 5px; width: 16px; height: 16px;
-    border-radius: 50%; background: var(--bg); border: 2px solid var(--fg); }
-  .pipe b { display: block; font-size: 16px; }
-  .pipe span { color: var(--muted); font-size: 14.5px; }
+  .steps { counter-reset: step; }
+  .steps li { counter-increment: step; list-style: none; padding-left: 36px; position: relative; margin-bottom: 10px; }
+  .steps li::before { content: counter(step); position: absolute; left: 0; top: 0;
+    width: 26px; height: 26px; border-radius: 50%; background: var(--c1); color: var(--c1i);
+    border: 1.5px solid var(--c1i); font-weight: 700; display: flex; align-items: center;
+    justify-content: center; font-size: 13px; }
 
-  /* ---------- prompt anatomy ---------- */
-  .anat { display: grid; grid-template-columns: 96px 1fr; gap: 10px 14px; align-items: center; }
-  .anat .tag { text-align: center; }
-  .anat div.d { font-size: 15.5px; }
+  .section-grid { display: grid; gap: 10px; }
+  .section-grid .item { background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 14px; }
+  .section-grid .num { background: var(--c1); color: var(--c1i); width: 28px; height: 28px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .section-grid .name { font-weight: 600; }
+  .section-grid .time { margin-left: auto; color: var(--muted); font-size: 13px; font-family: var(--mono); }
 
-  /* ---------- agenda ---------- */
-  .tl { display: flex; gap: 3px; height: 46px; margin: 8px 0 22px; }
-  .tl div { display: flex; align-items: center; padding: 0 10px; border-radius: 4px;
-    background: var(--bg); color: var(--fg); font-weight: 700; font-size: 14px;
-    overflow: hidden; white-space: nowrap; }
-  .ag { display: grid; grid-template-columns: 190px 1fr 70px; gap: 16px; align-items: center;
-    padding: 11px 0; border-bottom: 1px solid var(--rule); }
-  .ag .sec { margin: 0; justify-self: start; }
-  .ag .t { text-align: right; font-weight: 700; font-family: var(--mono); font-size: 14px; }
-
-  /* ---------- temperature lab ---------- */
-  .lab { background: var(--surface); border: 1.5px solid var(--ink); border-radius: 10px; padding: 18px 22px; margin: 6px 0 12px; }
-  .lab .prompt { font-family: var(--mono); font-size: 16px; margin-bottom: 14px; }
-  .lab .prompt b { background: var(--c4); color: var(--c4i); padding: 1px 8px; border-radius: 4px; }
-  .ctrls { display: flex; gap: 40px; flex-wrap: wrap; margin-bottom: 16px; }
-  .ctrls label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 14px; min-width: 250px; flex: 1; }
-  .ctrls output { font-family: var(--mono); font-weight: 400; color: var(--muted); margin-left: 8px; }
-  input[type=range] { width: 100%; accent-color: var(--ink); }
-  .bar-row { display: grid; grid-template-columns: 130px 1fr 130px; gap: 14px; align-items: center; margin: 7px 0; font-size: 14px; }
-  .bar-row .tok { font-family: var(--mono); }
-  .bar-row .tok i { color: var(--muted); font-style: normal; margin-left: 6px; }
-  .bar-track { height: 22px; background: #EDF0F7; border-radius: 4px; overflow: hidden; }
-  .bar-fill { height: 100%; background: var(--c4i); border-radius: 4px; transition: width .15s ease; }
-  .bar-row.cut .bar-fill { background: #B6BDCF; }
-  .bar-row.cut { color: var(--muted); }
-  .bar-row .pct { font-family: var(--mono); text-align: right; }
-  .lab-note { font-size: 15px; color: var(--muted); margin: 10px 0 0; min-height: 44px; }
-
-  /* ---------- recap questions ---------- */
   details { border-top: 1px solid var(--rule); padding: 11px 0; }
   details:last-of-type { border-bottom: 1px solid var(--rule); }
   summary { cursor: pointer; font-weight: 600; font-size: 16px; line-height: 1.4; }
   details[open] summary { color: var(--c4i); }
   details p { font-size: 15px; color: var(--muted); margin: 8px 0 0; }
 
-  /* ---------- title slide: the one memorable moment ---------- */
   .slide.title-slide.active { display: flex; flex-direction: column; justify-content: center; }
   .title-slide .wrap { width: 100%; }
   .title-slide h1 { font-size: clamp(52px, 10vw, 128px); line-height: 1.02; font-weight: 600;
@@ -181,7 +150,6 @@
   @keyframes tokin { to { opacity: 1; transform: none; } }
   @keyframes idin { to { opacity: 1; } }
 
-  /* ---------- controls ---------- */
   .controls { position: fixed; left: 0; right: 0; bottom: 0; height: 56px; background: var(--paper);
     border-top: 1px solid var(--rule); display: flex; align-items: center; gap: 16px;
     padding: 0 clamp(16px, 3vw, 32px); z-index: 100; }
@@ -197,192 +165,76 @@
   .counter { font-family: var(--mono); font-size: 13px; color: var(--muted); min-width: 60px; text-align: center; }
   :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
+  .slide > * { max-width: 1180px; width: 100%; }
+  .slide .wrap { width: 100%; }
+
   @media (max-width: 900px) {
-    .g2, .g3, .g4, .g-split { grid-template-columns: 1fr; }
-    .ag { grid-template-columns: 1fr 60px; }
-    .ag .d { grid-column: 1 / -1; order: 3; }
-    .bar-row { grid-template-columns: 90px 1fr 90px; }
+    .grid-2, .grid-3, .grid-4, .g-split { grid-template-columns: 1fr; }
     .counter, .fs { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {
     .title-slide .tk, .title-slide .tk::after { animation: none; opacity: 1; transform: none; }
-    .blk, .bar-fill { transition: none; }
+    .blk { transition: none; }
   }
-
-
-  /* ---------- Day-02 components, retuned to Day-01 tokens ---------- */
-  /* Callout: a colored, lightly-tinted note. Uses Day-01's three note variants. */
-  .callout {
-    background: #E4EDFA; border-radius: 6px; padding: 12px 16px; margin: 12px 0;
-    font-size: 15.5px; line-height: 1.55; max-width: 100%;
-  }
-  .callout.good { background: #DDF3E8; }
-  .callout.warn { background: #FBE3E8; }
-  .callout strong { color: var(--ink); }
-  .callout b { color: var(--ink); }
-
-  /* Diagram: a soft surface holding flowchart-like nodes */
-  .diagram {
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    background: var(--surface); border: 1px solid var(--rule); border-radius: 10px;
-    padding: 22px; margin: 14px 0;
-  }
-  .diagram-row { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
-
-  /* Node: a bordered chip. Color = section identity (c0..c5). */
-  .node {
-    background: var(--bg); color: var(--fg);
-    border: 1.5px solid var(--fg); border-radius: 8px;
-    padding: 10px 16px; font-weight: 600; font-size: 14px;
-    min-width: 110px; text-align: center;
-  }
-  /* The "alt / pink / yellow / gray" suffixes from Day-02 are remapped to
-     Day-02's six section colors via .alt = c2, .pink = c3, .yellow = c4,
-     .gray = c0. Authors who keep those classes get a coherent look. */
-  .node.alt    { --bg: var(--c2); --fg: var(--c2i); background: var(--c2); color: var(--c2i); border-color: var(--c2i); }
-  .node.pink   { --bg: var(--c3); --fg: var(--c3i); background: var(--c3); color: var(--c3i); border-color: var(--c3i); }
-  .node.yellow { --bg: var(--c4); --fg: var(--c4i); background: var(--c4); color: var(--c4i); border-color: var(--c4i); }
-  .node.gray   { --bg: #EEF1F8; --fg: var(--muted); background: #EEF1F8; color: var(--muted); border-color: var(--rule); }
-
-  .arrow       { font-size: 22px; color: var(--ink); font-weight: 700; }
-  .arrow-row   { font-size: 18px; color: var(--ink); }
-
-  /* Numbered step list (was bright accent circles) */
-  .steps { counter-reset: step; }
-  .steps li {
-    counter-increment: step; list-style: none;
-    padding-left: 36px; position: relative; margin-bottom: 10px;
-  }
-  .steps li::before {
-    content: counter(step); position: absolute; left: 0; top: 0;
-    width: 26px; height: 26px; border-radius: 50%;
-    background: var(--c1); color: var(--c1i);
-    border: 1.5px solid var(--c1i);
-    font-weight: 700; display: flex; align-items: center; justify-content: center;
-    font-size: 13px;
-  }
-
-  /* Q&A: a quiet card per question */
-  .qa { display: grid; gap: 10px; }
-  .qa-item { background: var(--surface); border: 1px solid var(--rule);
-    border-radius: 8px; padding: 12px 16px; }
-  .qa-item .q { color: var(--c2i); font-weight: 600; margin-bottom: 4px; }
-  .qa-item .a { color: var(--muted); font-size: 14px; }
-
-  /* Agenda item list (used on the Day-02 agenda slide) */
-  .section-grid { display: grid; gap: 10px; }
-  .section-grid .item {
-    background: var(--surface); border: 1px solid var(--rule);
-    border-radius: 8px; padding: 10px 16px; display: flex;
-    align-items: center; gap: 14px;
-  }
-  .section-grid .num {
-    background: var(--c1); color: var(--c1i);
-    width: 28px; height: 28px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 13px; flex-shrink: 0;
-  }
-  .section-grid .name { font-weight: 600; }
-  .section-grid .time { margin-left: auto; color: var(--muted); font-size: 13px; font-family: var(--mono); }
-
-  /* Keyboard hint chip (kbd) */
-  kbd { background: #E6EAF4; color: var(--ink);
-    border: 1px solid var(--rule); border-radius: 4px; padding: 2px 6px;
-    font-family: var(--mono); font-size: 12px; }
-
-  /* The wrap container (Day-01) caps at 1180px. Day-02 used 100% via flex.
-     Keep Day-01's .wrap and apply max-width on the slide body. */
-  .slide > * { max-width: 1180px; width: 100%; }
-  .slide .wrap { width: 100%; }
-
-
-  /* Day-02 used .card for feature grids. Style it as a paper-on-surface card. */
-  .grid > .card { border-top: 3px solid var(--fg, var(--ink)); padding-top: 10px;
-    background: transparent; border-radius: 0; }
-  .grid > .card h3 { margin-top: 0; font-size: 18px; }
-  .grid > .card p { font-size: 15px; color: var(--muted); margin: 0; line-height: 1.5; }
-
-  /* Card variant when used outside .grid (rare, but harmless). */
-  .card { background: transparent; }
-
-  /* Grid helpers (carried over from Day-02). */
-  .grid       { display: grid; gap: 22px 28px; }
-  .grid-2     { grid-template-columns: 1fr 1fr; }
-  .grid-3     { grid-template-columns: repeat(3, 1fr); }
-  .grid-4     { grid-template-columns: repeat(4, 1fr); }
-
-  /* Don't paint inline code inside <pre> with the paper background. */
-  pre code { background: transparent; color: inherit; padding: 0; font-size: inherit; }
 </style>
 </head>
 <body>
 <div class="deck" id="deck">
+
 <section class="slide title-slide active"><div class="wrap">
   <span class="tag c0">Day 2</span>
   <h1 aria-label="AI Agents"><span class="tk a" style="--i:0">AI</span><span class="tk b" style="--i:1">A</span><span class="tk c" style="--i:2">gents</span></h1>
   <p class="lede">What an agent really is, what makes one different, and how to build your first one.</p>
-  <p class="fine">45 minutes · Hands-on included. Builds on Day 1 (LLM Fundamentals).</p>
+  <p class="fine">45 minutes total · 35 min content + 10 min hands-on. Builds on Day 1 (LLM Fundamentals).</p>
 </div></section>
+
 <section class="slide" data-sec="Overview" data-c="0"><div class="wrap">
-  
-<h2>What You Will Learn</h2>
-<div class="grid grid-2">
-  <div class="card"><h3>What an AI Agent Is</h3><p>Autonomy, tool use, goal-directed loop.</p></div>
-  <div class="card"><h3>Agent vs Chatbot</h3><p>Where the line is drawn.</p></div>
-  <div class="card"><h3>Core Components</h3><p>LLM, Tools, Memory, Planning, Reasoning.</p></div>
-  <div class="card"><h3>Execution Flow</h3><p>Reason → Act → Observe, the ReAct loop.</p></div>
-  <div class="card"><h3>Architecture</h3><p>How all components fit into one system.</p></div>
-  <div class="card"><h3>Human-in-the-Loop</h3><p>Why writes need a human gate.</p></div>
-  <div class="card"><h3>Hands-on</h3><p>Build a basic agent that uses an external API.</p></div>
-  <div class="card"><h3>By the End</h3><p>You can describe, draw, and code an agent from scratch.</p></div>
-</div>
-</div></section>
-<section class="slide" data-sec="Agenda" data-c="0"><div class="wrap">
-  
-<h2>Today's 45 Minutes</h2>
-<div class="section-grid">
+<h2>Quick Recap &amp; Today's Plan</h2>
+<div class="callout"><strong>Day 1 recap:</strong> an LLM is a next-token predictor. Temperature and top_p shape how it samples. On its own, it only replies — it can't look anything up or do anything.</div>
+<div class="section-grid" style="margin-top:14px;">
   <div class="item"><div class="num">1</div><div class="name">What is an AI Agent?</div><div class="time">5 min</div></div>
   <div class="item"><div class="num">2</div><div class="name">Agent vs Chatbot + core components</div><div class="time">10 min</div></div>
   <div class="item"><div class="num">3</div><div class="name">Tools · Memory · Planning · Reasoning (detail)</div><div class="time">10 min</div></div>
-  <div class="item"><div class="num">4</div><div class="name">Execution flow + full architecture</div><div class="time">10 min</div></div>
+  <div class="item"><div class="num">4</div><div class="name">Execution flow, architecture &amp; guardrails</div><div class="time">10 min</div></div>
   <div class="item"><div class="num">5</div><div class="name">Hands-on: build your first agent</div><div class="time">10 min</div></div>
 </div>
 </div></section>
+
 <section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
-  
-<h2>1. What Are AI Agents?</h2>
-<div class="callout"><strong>An AI agent</strong> is an LLM-powered system that can <b>perceive</b> its environment, <b>decide</b> what to do, and <b>act</b> on the world — looping until its goal is met.</div>
+<h2>1. What Is an AI Agent?</h2>
+<div class="callout"><strong>An AI agent</strong> is an LLM-powered system that can <b>perceive</b> its environment, <b>decide</b> what to do, and <b>act</b> on the world — looping until its goal is met or it hits a limit.</div>
 <h3>Three defining traits</h3>
 <ul>
   <li><b>Autonomy</b> — chooses its next action without a human step-by-step prompt.</li>
   <li><b>Tool use</b> — calls external functions (search, ticket systems, code, files).</li>
-  <li><b>Goal-directed</b> — keeps iterating until the user's goal is satisfied (or it gives up).</li>
+  <li><b>Goal-directed</b> — keeps iterating until the goal is satisfied, or it gives up and asks for help.</li>
 </ul>
-<pre><span class="com"># An agent is just a loop around an LLM that can call tools:</span>
-<span class="kw">while not</span> goal_met:
-    thought = llm.<span class="fn">reason</span>(state)            <span class="com"># "I should look up T-1042"</span>
-    action  = llm.<span class="fn">choose_tool</span>(thought)      <span class="com"># get_ticket_status</span>
-    result  = <span class="fn">execute</span>(action)                 <span class="com"># {"id":"T-1042","status":"OPEN"}</span>
-    state.<span class="fn">update</span>(thought, action, result)    <span class="com"># add to history</span></pre>
+<pre><span class="com"># Simplified: one LLM call per turn, which returns either</span>
+<span class="com"># a final answer or a tool call to make. The loop repeats.</span>
+<span class="kw">while not</span> done:
+    response = llm.<span class="fn">call</span>(state)          <span class="com"># model decides: answer, or call a tool</span>
+    <span class="kw">if</span> response.has_tool_call:
+        result = <span class="fn">execute</span>(response.tool_call)
+        state.<span class="fn">append</span>(response, result)   <span class="com"># observation feeds the next turn</span>
+    <span class="kw">else</span>:
+        done = <span class="kw">True</span>                       <span class="com"># model chose to answer instead</span></pre>
 </div></section>
+
 <section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
-  
-<h2>2. Agent vs Chatbot</h2>
+<h2>2. Agent vs Chatbot — a Spectrum, Not a Line</h2>
 <table>
-  <tr><th></th><th>Chatbot</th><th>AI Agent</th></tr>
-  <tr><td><b>Goal</b></td><td>Reply to messages</td><td>Achieve a user goal</td></tr>
-  <tr><td><b>Tools</b></td><td>None (or limited)</td><td>Many — search, APIs, code, files</td></tr>
-  <tr><td><b>Loop</b></td><td>One-shot reply</td><td>Multi-step Reason → Act → Observe</td></tr>
-  <tr><td><b>Memory</b></td><td>Often none</td><td>Short-term state + long-term memory</td></tr>
-  <tr><td><b>Initiative</b></td><td>Reactive</td><td>Proactive — picks next step</td></tr>
-  <tr><td><b>Output</b></td><td>A reply</td><td>A reply <i>and/or</i> a side-effect</td></tr>
-  <tr><td><b>Failure mode</b></td><td>Hallucinates politely</td><td>Hallucinates <i>and</i> takes a wrong action</td></tr>
+  <tr><th></th><th>Plain chatbot</th><th>Chatbot + tools</th><th>Agent</th></tr>
+  <tr><td><b>Goal</b></td><td>Reply to messages</td><td>Reply, sometimes with a lookup</td><td>Achieve a multi-step goal</td></tr>
+  <tr><td><b>Loop</b></td><td>One-shot reply</td><td>Reply, maybe one tool call</td><td>Reason → Act → Observe, repeated</td></tr>
+  <tr><td><b>Initiative</b></td><td>Reactive</td><td>Reactive</td><td>Proactive — picks its own next step</td></tr>
+  <tr><td><b>Failure mode</b></td><td>Hallucinates politely</td><td>Wrong lookup, wrong answer</td><td>Wrong answer <i>and</i> wrong real-world action</td></tr>
 </table>
-<div class="callout"><strong>Rule of thumb:</strong> if it can call a tool and loop, it's an agent. If it just answers, it's a chatbot.</div>
+<div class="callout"><strong>Rule of thumb:</strong> if it plans several steps ahead and decides when it's done, it's an agent.</div>
+<div class="callout warn"><strong>Don't reach for an agent by default.</strong> If the steps are fixed and known in advance, a plain workflow (or a single tool call) is cheaper, faster, and easier to debug than an autonomous loop.</div>
 </div></section>
+
 <section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
-  
-<h2>3. Agent Components — The Big Picture</h2>
+<h2>3. The Building Blocks — Big Picture</h2>
 <div class="diagram">
   <div class="node alt">LLM (the brain)</div>
   <div class="arrow-row">↓ drives</div>
@@ -392,169 +244,134 @@
   </div>
   <div class="arrow-row">↓ coordinated by</div>
   <div class="node yellow">Planning &amp; Reasoning</div>
-  <div class="arrow-row">↓ running on</div>
-  <div class="node">Execution Flow (the loop)</div>
+  <div class="arrow-row">↓ running inside</div>
+  <div class="node">The Execution Loop</div>
 </div>
 <table style="margin-top:14px;">
   <tr><th>Component</th><th>Role</th></tr>
-  <tr><td><b>LLM</b></td><td>Reasoning engine that produces thoughts + tool calls</td></tr>
+  <tr><td><b>LLM</b></td><td>Reasoning engine that decides the next action</td></tr>
   <tr><td><b>Tools</b></td><td>External actions the agent can take</td></tr>
-  <tr><td><b>Memory</b></td><td>What it remembers now + across runs</td></tr>
-  <tr><td><b>Planning</b></td><td>How it picks the next step</td></tr>
-  <tr><td><b>Reasoning</b></td><td>How the LLM thinks (CoT, ReAct, self-critique)</td></tr>
+  <tr><td><b>Memory</b></td><td>What it remembers this turn, and across runs</td></tr>
+  <tr><td><b>Planning</b></td><td>How it sequences the next step</td></tr>
+  <tr><td><b>Reasoning</b></td><td>How the LLM thinks before it acts</td></tr>
 </table>
+<p class="muted" style="font-size:14px; margin-top:6px;">Later we'll add four more: State, Context, Guardrails, and Human-in-the-loop — the parts that make an agent production-ready rather than a demo.</p>
 </div></section>
+
 <section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
-  
 <h2>4a. Tools — The Agent's Hands</h2>
-<div class="callout"><strong>A tool</strong> is a function the LLM can invoke. Each tool has a <b>name</b>, a <b>description</b>, and a <b>JSON schema</b> of parameters.</div>
+<div class="callout"><strong>A tool</strong> is a function the LLM can invoke. Each tool has a <b>name</b>, a <b>description</b>, and a <b>JSON schema</b> of parameters — this is now standardized via <b>MCP</b> (Model Context Protocol), so a tool can be reused across different agents and frameworks.</div>
 <table>
   <tr><th>Tool</th><th>What it does</th></tr>
   <tr><td><code>search_docs(query)</code></td><td>RAG search over your knowledge base</td></tr>
   <tr><td><code>get_ticket_status(id)</code></td><td>Look up a Jira ticket</td></tr>
   <tr><td><code>create_ticket(title, desc)</code></td><td>Open a new Jira ticket</td></tr>
   <tr><td><code>send_email(to, body)</code></td><td>Send an email</td></tr>
-  <tr><td><code>run_python(code)</code></td><td>Execute Python in a sandbox</td></tr>
 </table>
-<div class="callout good" style="margin-top:14px;"><strong>Rule:</strong> descriptions matter more than names. The LLM picks tools <i>based on the description</i>.</div>
+<div class="callout good"><strong>Rule:</strong> descriptions matter more than names — the LLM picks tools <i>based on the description</i>, so write them like documentation, not a variable name.</div>
+<div class="callout warn"><strong>Tool output is untrusted input.</strong> If a tool reads a webpage, a ticket, or a document, treat its result the way you'd treat user input — it can contain instructions trying to hijack the agent ("prompt injection"). Scope each tool's permissions to the minimum it needs.</div>
 </div></section>
+
 <section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
-  
 <h2>4b. Memory — What the Agent Remembers</h2>
 <table>
   <tr><th>Type</th><th>What it stores</th><th>Example</th></tr>
-  <tr><td><b>Short-term</b></td><td>Current conversation</td><td>The messages list</td></tr>
+  <tr><td><b>Short-term (state)</b></td><td>This run only</td><td>The current message list</td></tr>
   <tr><td><b>Long-term (semantic)</b></td><td>Facts about the user / company</td><td>"User is in Engineering dept"</td></tr>
   <tr><td><b>Episodic</b></td><td>Past interactions</td><td>"Last week user asked about VPN"</td></tr>
   <tr><td><b>Procedural</b></td><td>How-to knowledge</td><td>Stored in prompts / RAG docs</td></tr>
-  <tr><td><b>Working</b></td><td>Scratch values for current task</td><td>Intermediate calculation</td></tr>
+  <tr><td><b>Working</b></td><td>Scratch values for this task</td><td>A running total mid-calculation</td></tr>
 </table>
-<div class="callout"><strong>State vs Memory:</strong> <i>state</i> is per-run; <i>memory</i> persists across runs. Never use globals for state — use a thread_id / run_id.</div>
+<div class="callout"><strong>State vs memory:</strong> <i>state</i> disappears when the run ends; <i>memory</i> persists across runs, keyed by a stable <code>thread_id</code> or <code>user_id</code> — never a global variable.</div>
 </div></section>
+
 <section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
-  
-<h2>4c. Planning — How the Agent Picks the Next Step</h2>
+<h2>4c. Planning &amp; Reasoning — Deciding What's Next</h2>
 <div class="grid grid-2">
   <div class="card">
     <h3>ReAct (most common)</h3>
-    <p>Reason → Act → Observe in a tight loop. The LLM thinks one step at a time.</p>
-    <pre style="margin-top:6px;">Thought: I need T-1042 status
-Action: get_ticket_status("T-1042")
-Observation: OPEN
-Thought: now I can answer</pre>
+    <p>Reason → Act → Observe, one step at a time. With native tool calling, the model returns a tool call directly — no hand-written "Thought:" text needed.</p>
   </div>
   <div class="card">
     <h3>Plan-and-Execute</h3>
-    <p>First generate a full plan, then execute each step.</p>
-    <pre style="margin-top:6px;">Plan:
-  1. Search VPN docs
-  2. Get user tickets
-  3. Draft reply
-Execute:
-  → step 1 done
-  → step 2 done
-  → step 3 done</pre>
+    <p>Generate a full plan up front, then execute each step. More auditable, less flexible when things change mid-task.</p>
   </div>
 </div>
-<div class="callout"><strong>Trade-off:</strong> ReAct is flexible but verbose. Plan-and-Execute is auditable but rigid.</div>
-</div></section>
-<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
-  
-<h2>4d. Reasoning — How the LLM Thinks</h2>
-<div class="callout"><strong>Reasoning</strong> is what the LLM does between the user's question and a tool call. It's controlled by your prompt.</div>
-<table>
-  <tr><th>Technique</th><th>How</th></tr>
-  <tr><td><b>Chain-of-thought (CoT)</b></td><td>Append "Let's think step by step" to the prompt</td></tr>
-  <tr><td><b>ReAct formatting</b></td><td>Force a "Thought:" prefix before each action</td></tr>
-  <tr><td><b>Self-critique</b></td><td>Ask the model to verify its own answer</td></tr>
-  <tr><td><b>Tree-of-thought</b></td><td>Explore multiple branches, pick the best (expensive)</td></tr>
+<table style="margin-top:10px;">
+  <tr><th>Reasoning technique</th><th>How</th></tr>
+  <tr><td><b>Chain-of-thought</b></td><td>Ask the model to reason before answering — many current models do this by default</td></tr>
+  <tr><td><b>Self-critique</b></td><td>Ask the model to verify its own answer before finishing</td></tr>
+  <tr><td><b>Tree-of-thought</b></td><td>Explore multiple branches, pick the best one (expensive, rarely needed)</td></tr>
 </table>
-<div class="callout good" style="margin-top:14px;"><strong>Default:</strong> CoT in the system prompt. Add ReAct formatting if you're building an agent loop.</div>
+<div class="callout"><strong>Trade-off:</strong> ReAct is flexible but can loop longer. Plan-and-Execute is predictable but rigid if the plan turns out wrong mid-way.</div>
 </div></section>
+
 <section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
-  
-<h2>5. Agent Execution Flow — Reason → Act → Observe</h2>
+<h2>5. Execution Flow — Reason → Act → Observe</h2>
 <div class="diagram">
   <div class="node">User Goal</div>
   <div class="arrow">↓</div>
-  <div class="node alt">REASON — LLM thinks: "I need to find ticket T-1042"</div>
+  <div class="node alt">REASON — model decides: answer, or call a tool</div>
   <div class="arrow">↓</div>
   <div class="node pink">ACT — call <code>get_ticket_status("T-1042")</code></div>
   <div class="arrow">↓</div>
-  <div class="node yellow">OBSERVE — result: <code>{"status":"OPEN","priority":2}</code></div>
+  <div class="node yellow">OBSERVE — result: <code>{"status":"OPEN"}</code></div>
   <div class="arrow-row">↓ loop back to REASON</div>
-  <div class="diagram-row">
-    <div class="node">REASON</div>
-    <div class="node alt">ACT</div>
-    <div class="node pink">OBSERVE</div>
-  </div>
-  <div class="arrow-row">↓ until goal met OR iteration cap</div>
-  <div class="node">Final Answer</div>
+  <div class="node green">Final Answer — model chooses to stop</div>
 </div>
-<div class="callout warn"><strong>Always set a max iteration cap</strong> (e.g. 5–10). Without it, a confused agent can burn $1000 overnight.</div>
+<div class="callout warn"><strong>Always set a max iteration cap</strong> (e.g. 5–10) and a per-run cost/time budget. Without one, a confused agent can loop indefinitely and run up a large bill overnight.</div>
 </div></section>
+
 <section class="slide" data-sec="Architecture" data-c="2"><div class="wrap">
-  
-<h2>6a. Agent Architecture — Full System</h2>
+<h2>6. Full Architecture — Where Guardrails &amp; Approval Sit</h2>
 <div class="diagram">
   <div class="node">User</div>
   <div class="arrow">↓</div>
-  <div class="node gray">Input Guardrail</div>
+  <div class="node gray">Input Guardrail — PII redaction, injection checks, rate limit</div>
   <div class="arrow">↓</div>
-  <div class="node">Agent (ReAct loop)</div>
-  <div class="arrow">↓ orchestrates</div>
+  <div class="node alt">Agent Loop — LLM + Planning, using Context (system prompt + history + retrieved docs)</div>
+  <div class="arrow-row">↓ reasons, then wants to act</div>
   <div class="diagram-row">
-    <div class="node pink">LLM</div>
-    <div class="node pink">Tools / APIs</div>
-    <div class="node pink">Memory</div>
-    <div class="node pink">RAG</div>
+    <div class="node pink">Read-only tool → runs immediately</div>
+    <div class="node pink">Write / external tool → held for approval</div>
   </div>
-  <div class="arrow-row">↓ guarded by</div>
-  <div class="node yellow">Planning &amp; Orchestration</div>
-  <div class="arrow">↓ on writes</div>
-  <div class="node">Human-in-the-Loop</div>
+  <div class="arrow-row">↓ writes only</div>
+  <div class="node yellow">Human-in-the-Loop Approval</div>
   <div class="arrow">↓</div>
-  <div class="node gray">Output Guardrail</div>
+  <div class="node gray">Output Guardrail — schema check, toxicity filter, citation check</div>
   <div class="arrow">↓</div>
   <div class="node">Final Response</div>
 </div>
+<div class="callout good"><strong>Key fix from a naive design:</strong> approval sits <i>before a write executes</i>, not at the end of the whole run — by the time the LLM has finished, a bad write may already have happened.</div>
 </div></section>
+
 <section class="slide" data-sec="Architecture" data-c="2"><div class="wrap">
-  
-<h2>6b. Inside the Box — LLM, Tools/APIs, Memory, RAG</h2>
+<h2>7. The 9 Building Blocks, End to End</h2>
 <table>
-  <tr><th>Block</th><th>What it does</th><th>Example</th></tr>
-  <tr><td><b>LLM</b></td><td>Reasoning engine — picks tool, drafts response</td><td>gpt-4o-mini</td></tr>
-  <tr><td><b>Tools / APIs</b></td><td>Actions the agent can take on the world</td><td>Jira API, Slack, calendar</td></tr>
-  <tr><td><b>Memory</b></td><td>Stores facts about user + past interactions</td><td>Vector DB + Redis</td></tr>
-  <tr><td><b>RAG</b></td><td>Retrieves company docs to ground answers</td><td>pgvector over HR/IT policies</td></tr>
-</table>
-<div class="callout"><strong>Note:</strong> RAG is technically a <i>tool</i> the agent can call. We treat it as its own block because it's the most-used grounding mechanism in production.</div>
-</div></section>
-<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
-  
-<h2>6c. Planning, Orchestration &amp; Human-in-the-Loop</h2>
-<table>
-  <tr><th>Block</th><th>What it does</th><th>Example</th></tr>
-  <tr><td><b>Planning</b></td><td>Decides the next step (ReAct or Plan-and-Execute)</td><td>"I'll search docs first, then create a ticket"</td></tr>
-  <tr><td><b>Orchestration</b></td><td>Runs the loop, tracks state, retries, enforces limits</td><td>LangGraph, Temporal</td></tr>
-  <tr><td><b>Human-in-the-loop</b></td><td>Pauses destructive/external actions until a human approves</td><td>Manager approves ticket creation</td></tr>
+  <tr><th>Block</th><th>Role</th><th>Example</th></tr>
+  <tr><td>LLM</td><td>Reasoning engine</td><td>Any current tool-calling model</td></tr>
+  <tr><td>Tools</td><td>External actions</td><td><code>search_docs</code>, <code>get_ticket</code></td></tr>
+  <tr><td>State</td><td>Current run snapshot</td><td>Messages list, loop counter</td></tr>
+  <tr><td>Memory</td><td>Cross-run recall</td><td>Vector store, user profile DB</td></tr>
+  <tr><td>Planning</td><td>Decide next step</td><td>ReAct, plan-and-execute</td></tr>
+  <tr><td>Reasoning</td><td>How the LLM thinks</td><td>Chain-of-thought, self-critique</td></tr>
+  <tr><td>Context</td><td>What the LLM sees</td><td>System prompt + history + retrieved docs</td></tr>
+  <tr><td>Guardrails</td><td>Safety + policy</td><td>Input/output filters, rate limits</td></tr>
+  <tr><td>Human-in-the-loop</td><td>Oversight on writes</td><td>Approve before creating a ticket</td></tr>
 </table>
 <div class="grid grid-2" style="margin-top:14px;">
-  <div class="card"><h3>Without HITL</h3><p>Agent creates 200 duplicate tickets overnight. The on-call manager gets paged at 3am.</p></div>
-  <div class="card"><h3>With HITL</h3><p>Agent drafts the ticket, a human clicks "Approve", then it's sent. 1-minute delay, zero cleanup.</p></div>
+  <div class="card"><h3>Without HITL</h3><p>Agent creates 200 duplicate tickets overnight. On-call gets paged at 3am.</p></div>
+  <div class="card"><h3>With HITL</h3><p>Agent drafts the ticket, a human approves, then it's sent. One-minute delay, zero cleanup.</p></div>
 </div>
-<div class="callout good" style="margin-top:14px;"><strong>Rule:</strong> any tool that creates, sends, deletes, or charges should require human approval by default.</div>
 </div></section>
+
 <section class="slide" data-sec="Code" data-c="3"><div class="wrap">
-  
 <h2>Minimal Tool-Calling Agent (Python)</h2>
 <pre><span class="kw">import</span> json
 <span class="kw">from</span> openai <span class="kw">import</span> OpenAI
 client = OpenAI()
 
-SYSTEM = <span class="str">"""You are an IT support agent.
-Use tools when needed, then give a final answer."""</span>
+SYSTEM = <span class="str">"You are an IT support agent. Use tools when needed, then give a final answer."</span>
 
 TOOLS = [{
     <span class="str">"type"</span>: <span class="str">"function"</span>,
@@ -563,42 +380,50 @@ TOOLS = [{
         <span class="str">"description"</span>: <span class="str">"Look up a Jira ticket by ID."</span>,
         <span class="str">"parameters"</span>: {
             <span class="str">"type"</span>: <span class="str">"object"</span>,
-            <span class="str">"properties"</span>: {<span class="str">"ticket_id"</span>: {<span class="str">"type"</span>: <span class="str">"string"</span>}}
+            <span class="str">"properties"</span>: {<span class="str">"ticket_id"</span>: {<span class="str">"type"</span>: <span class="str">"string"</span>}},
+            <span class="str">"required"</span>: [<span class="str">"ticket_id"</span>]
         }
     }
 }]
 
+<span class="kw">def</span> <span class="fn">get_ticket_status</span>(ticket_id):
+    <span class="kw">return</span> {<span class="str">"id"</span>: ticket_id, <span class="str">"status"</span>: <span class="str">"OPEN"</span>}   <span class="com"># stub — replace with a real Jira call</span>
+
+DISPATCH = {<span class="str">"get_ticket_status"</span>: get_ticket_status}
+
 <span class="kw">def</span> <span class="fn">run_agent</span>(user_msg, max_iter=<span class="num">5</span>):
-    messages = [{<span class="str">"role"</span>:<span class="str">"system"</span>,<span class="str">"content"</span>:SYSTEM},
-                {<span class="str">"role"</span>:<span class="str">"user"</span>,  <span class="str">"content"</span>:user_msg}]
+    messages = [{<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: SYSTEM},
+                {<span class="str">"role"</span>: <span class="str">"user"</span>,   <span class="str">"content"</span>: user_msg}]
     <span class="kw">for</span> step <span class="kw">in</span> <span class="fn">range</span>(max_iter):
-        resp = client.chat.completions.create(
-            model=<span class="str">"gpt-4o-mini"</span>, messages=messages, tools=TOOLS)
+        resp = client.chat.completions.create(model=<span class="str">"MODEL"</span>, messages=messages, tools=TOOLS)
         msg = resp.choices[<span class="num">0</span>].message
-        <span class="kw">if not</span> msg.tool_calls: <span class="kw">return</span> msg.content
+        <span class="kw">if not</span> msg.tool_calls:
+            <span class="kw">return</span> msg.content                       <span class="com"># model chose to answer — loop ends</span>
         messages.append(msg)
         <span class="kw">for</span> call <span class="kw">in</span> msg.tool_calls:
-            result = json.dumps({<span class="str">"id"</span>: call.function.arguments, <span class="str">"status"</span>: <span class="str">"OPEN"</span>})
-            messages.append({<span class="str">"role"</span>:<span class="str">"tool"</span>, <span class="str">"tool_call_id"</span>: call.id, <span class="str">"content"</span>: result})
-    <span class="kw">return</span> <span class="str">"(max iterations)"</span></pre>
+            args = json.loads(call.function.arguments)     <span class="com"># parse, don't just stash the raw string</span>
+            result = DISPATCH[call.function.name](**args)
+            messages.append({<span class="str">"role"</span>: <span class="str">"tool"</span>, <span class="str">"tool_call_id"</span>: call.id,
+                              <span class="str">"content"</span>: json.dumps(result)})
+    <span class="kw">return</span> <span class="str">"(hit max_iter — stopped without a final answer)"</span></pre>
+<div class="callout"><strong>Note:</strong> this is native tool calling, the standard way agents work today — there's no hand-written "Thought:" text to parse; the model returns structured <code>tool_calls</code> directly.</div>
 </div></section>
-<section class="slide" data-sec="Code" data-c="3"><div class="wrap">
-  
-<h2>Connecting an External Tool/API</h2>
-<pre><span class="kw">import</span> requests
 
-<span class="kw">def</span> <span class="fn">get_weather</span>(city: str) -> str:
+<section class="slide" data-sec="Code" data-c="3"><div class="wrap">
+<h2>Connecting a Real External Tool/API</h2>
+<pre><span class="kw">import</span> json, requests
+
+<span class="kw">def</span> <span class="fn">get_weather</span>(city: str) -> dict:
     <span class="str">"""Look up the current weather in a city."""</span>
-    resp = requests.get(
-        <span class="str">"https://wttr.in/"</span> + city + <span class="str">"?format=j1"</span>,
-        timeout=<span class="num">5</span>)
-    data = resp.json()
-    cur = data[<span class="str">"current_condition"</span>][<span class="num">0</span>]
-    <span class="kw">return</span> json.dumps({
-        <span class="str">"city"</span>: city,
-        <span class="str">"temp_c"</span>: cur[<span class="str">"temp_C"</span>],
-        <span class="str">"desc"</span>: cur[<span class="str">"weatherDesc"</span>][<span class="num">0</span>][<span class="str">"value"</span>],
-    })
+    <span class="kw">try</span>:
+        resp = requests.get(<span class="str">"https://wttr.in/"</span> + city,
+                             params={<span class="str">"format"</span>: <span class="str">"j1"</span>}, timeout=<span class="num">5</span>)
+        resp.raise_for_status()
+        cur = resp.json()[<span class="str">"current_condition"</span>][<span class="num">0</span>]
+        <span class="kw">return</span> {<span class="str">"city"</span>: city, <span class="str">"temp_c"</span>: cur[<span class="str">"temp_C"</span>],
+                <span class="str">"desc"</span>: cur[<span class="str">"weatherDesc"</span>][<span class="num">0</span>][<span class="str">"value"</span>]}
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="kw">return</span> {<span class="str">"error"</span>: <span class="fn">str</span>(e)}          <span class="com"># wttr.in is flaky — never let a tool crash the loop</span>
 
 TOOLS = [{
     <span class="str">"type"</span>: <span class="str">"function"</span>,
@@ -612,138 +437,59 @@ TOOLS = [{
         }
     }
 }]
+DISPATCH[<span class="str">"get_weather"</span>] = get_weather</pre>
+<div class="callout good"><strong>That's it.</strong> A real API call wrapped as a function, with params properly encoded and errors caught — the LLM doesn't know or care whether it's HTTP, a DB query, or a stub.</div>
+</div></section>
 
-DISPATCH = {<span class="str">"get_weather"</span>: get_weather}</pre>
-<div class="callout good"><strong>That's it.</strong> A real API call wrapped as a function — the LLM doesn't know or care whether it's HTTP, a DB query, or a stub.</div>
-</div></section>
 <section class="slide" data-sec="Hands-on" data-c="4"><div class="wrap">
-  
-<h2>Hands-on — Build a Simple AI Agent (15 min)</h2>
+<h2>Hands-on — Build a Simple AI Agent (10 min)</h2>
 <ol class="steps">
-  <li>Open <code>code/day2_simple_agent.py</code> in this folder.</li>
-  <li>Run it: <code>python code/day2_simple_agent.py</code> — confirm the agent loops with a single mock tool.</li>
-  <li>Add a second tool: <code>get_weather(city)</code> that hits a real public API (e.g. <code>wttr.in</code>).</li>
+  <li>Open <code>code/day2_simple_agent.py</code> and run it — confirm the agent loops with one mock tool.</li>
+  <li>Add <code>get_weather(city)</code> from the previous slide, backed by a real public API.</li>
   <li>Test: <i>"I'm traveling to Tokyo tomorrow — what's the weather?"</i> → agent should call <code>get_weather("Tokyo")</code>.</li>
-  <li>Add a third tool: <code>create_reminder(text, when)</code> — just prints to console for now.</li>
-  <li>Add a <b>guardrail</b>: any user message containing "password" returns a refusal <i>before</i> the LLM is called.</li>
-  <li>Bonus: add a <b>Human-in-the-loop</b> gate on <code>create_reminder</code> — prints "Awaiting approval" and returns a fake ticket ID.</li>
-  <li>Bonus: stream tokens as they arrive (<code>stream=True</code>).</li>
+  <li>Add a <b>guardrail</b>: any user message containing "password" returns a refusal before the LLM is called. (This is a toy example — a real guardrail needs more than a keyword match.)</li>
+  <li>Bonus: add a <b>Human-in-the-loop</b> gate on any write-style tool — print "Awaiting approval" and stop before it "executes".</li>
 </ol>
-<div class="callout good" style="margin-top:14px;"><strong>Done?</strong> You have a working agent that picks tools, calls an external API, executes a task, and respects guardrails.</div>
+<div class="callout good" style="margin-top:14px;"><strong>Done?</strong> You have a working agent that picks a tool, calls a real external API, handles a failure, and respects a guardrail.</div>
 </div></section>
-<section class="slide" data-sec="Architecture" data-c="2"><div class="wrap">
-  
-<h2>Complete Agent Architecture</h2>
-<div class="diagram">
-  <div class="node">User</div>
-  <div class="arrow">↓</div>
-  <div class="node gray">Guardrails (input filter)</div>
-  <div class="arrow">↓</div>
-  <div class="node">Agent</div>
-  <div class="arrow">↓</div>
-  <div class="node alt">LLM</div>
-  <div class="arrow-row">↓ uses</div>
-  <div class="diagram-row">
-    <div class="node pink">HR Policy Tool</div>
-    <div class="node pink">Employee Data Tool</div>
-    <div class="node pink">Ticket Tool</div>
-  </div>
-  <div class="arrow-row">↑ outputs</div>
-  <div class="node yellow">Guardrails (output filter)</div>
-  <div class="arrow">↓</div>
-  <div class="node">Human Approval</div>
-  <div class="arrow">↓</div>
-  <div class="node gray">Final Response</div>
+
+<section class="slide" data-sec="Recap" data-c="0"><div class="wrap">
+<h2>Quick Recap</h2>
+<div class="qa" style="display:grid; gap:10px;">
+  <details>
+    <summary>What's the one-sentence difference between an agent and a chatbot?</summary>
+    <p>An agent plans and takes multiple actions toward a goal and decides for itself when it's done; a chatbot replies once per turn.</p>
+  </details>
+  <details>
+    <summary>Why does a write-style tool need human approval, but a read-only tool usually doesn't?</summary>
+    <p>Reads are safe to retry and don't change anything if the agent is wrong; writes (create, send, delete, charge) can cause real, hard-to-undo damage.</p>
+  </details>
+  <details>
+    <summary>Why treat a tool's output as untrusted input?</summary>
+    <p>If a tool fetches a webpage or document, that content could contain instructions trying to redirect the agent — the same way you'd never blindly trust user-supplied text.</p>
+  </details>
+  <details>
+    <summary>Why does every agent loop need a max iteration cap?</summary>
+    <p>Without one, a confused agent can keep calling tools indefinitely, running up cost and time with no guaranteed exit.</p>
+  </details>
 </div>
 </div></section>
-<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
-  
-<h2>The 9 Building Blocks</h2>
-<table>
-  <tr><th>Block</th><th>Role</th><th>Example</th></tr>
-  <tr><td>LLM</td><td>Reasoning engine</td><td>gpt-4o, claude-sonnet</td></tr>
-  <tr><td>Tools</td><td>External actions</td><td>search_docs, get_ticket</td></tr>
-  <tr><td>State</td><td>Current run snapshot</td><td>messages list</td></tr>
-  <tr><td>Memory</td><td>Cross-run recall</td><td>vector store, user profile DB</td></tr>
-  <tr><td>Planning</td><td>Decide next step</td><td>ReAct, plan-and-execute</td></tr>
-  <tr><td>Reasoning</td><td>How the LLM thinks</td><td>chain-of-thought in prompt</td></tr>
-  <tr><td>Context</td><td>What the LLM sees</td><td>system prompt + history + retrieved docs</td></tr>
-  <tr><td>Guardrails</td><td>Safety + policy</td><td>input filter, output filter, rate limit</td></tr>
-  <tr><td>Human-in-the-loop</td><td>Oversight</td><td>approve before creating a ticket</td></tr>
-</table>
-</div></section>
-<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
-  
-<h2>Memory Types &amp; Guardrails</h2>
-<div class="grid grid-2">
-  <div class="card">
-    <h3>Memory Types</h3>
-    <ul>
-      <li><b>Short-term</b> — current message list</li>
-      <li><b>Long-term (semantic)</b> — facts about user/company</li>
-      <li><b>Episodic</b> — past interactions</li>
-      <li><b>Procedural</b> — how-to knowledge</li>
-      <li><b>Working</b> — intermediate scratch values</li>
-    </ul>
-  </div>
-  <div class="card">
-    <h3>Guardrails</h3>
-    <ul>
-      <li><b>Input:</b> PII redaction, injection detect, rate limit, length cap</li>
-      <li><b>Output:</b> schema validation, toxicity filter, PII redaction, citation check</li>
-    </ul>
-    <div class="callout warn" style="margin-top:8px;"><strong>Always</strong> validate output before acting on it.</div>
-  </div>
-</div>
-</div></section>
-<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
-  
-<h2>Human-in-the-Loop Patterns</h2>
-<table>
-  <tr><th>Pattern</th><th>When</th><th>Example</th></tr>
-  <tr><td><b>Approve before write</b></td><td>Destructive / external action</td><td>Creating a Jira ticket</td></tr>
-  <tr><td><b>Confirm &amp; continue</b></td><td>Multi-step plan</td><td>Show 3-step plan before executing</td></tr>
-  <tr><td><b>Review after</b></td><td>Read-only / low risk</td><td>Draft email — human sends</td></tr>
-  <tr><td><b>Escalation</b></td><td>Low confidence</td><td>Agent unsure → notify manager</td></tr>
-  <tr><td><b>Correction</b></td><td>Human corrects mid-flow</td><td>"No, use the contractor policy"</td></tr>
-</table>
-</div></section>
-<section class="slide" data-sec="Project" data-c="2"><div class="wrap">
-  
-<h2>Policy-Aware Helpdesk — Concept → Implementation</h2>
-<table>
-  <tr><th>Concept</th><th>Project Implementation</th></tr>
-  <tr><td>LLM</td><td>Azure OpenAI gpt-4o</td></tr>
-  <tr><td>Tools</td><td>HR Policy, Employee Data, Ticket (RAG-backed)</td></tr>
-  <tr><td>State</td><td>LangGraph state object</td></tr>
-  <tr><td>Memory</td><td>Vector store of HR docs + user profile</td></tr>
-  <tr><td>Context</td><td>User role + last 5 messages + retrieved policy</td></tr>
-  <tr><td>Guardrails</td><td>PII redaction, JSON validation, rate limit</td></tr>
-  <tr><td>HITL</td><td>Manager approval for sensitive ticket creation</td></tr>
-</table>
-</div></section>
+
 <section class="slide" data-sec="Wrap-up" data-c="5"><div class="wrap">
-  
 <h2>What You Now Have</h2>
-<div class="callout good"><strong>A working mental model + working code</strong> for an AI agent that can perceive, decide, act, and loop.</div>
+<div class="callout good"><strong>A working mental model and working code</strong> for an AI agent that can perceive, decide, act, and loop.</div>
 <ul style="margin-top:14px;">
-  <li>🎯 You can <b>define</b> an agent (autonomy, tools, goal-directed).</li>
-  <li>📊 You can <b>distinguish</b> agents from chatbots and plain LLM apps.</li>
-  <li>🧩 You can <b>name the 5 components</b>: LLM, Tools, Memory, Planning, Reasoning.</li>
-  <li>🔁 You can <b>draw the execution flow</b>: Reason → Act → Observe.</li>
-  <li>🏗️ You can <b>sketch the full architecture</b> including guardrails and HITL.</li>
-  <li>💻 You can <b>build one</b> that connects to a real external API.</li>
+  <li>You can <b>define</b> an agent (autonomy, tools, goal-directed) and say when <i>not</i> to use one.</li>
+  <li>You can <b>name the 5 core components</b> — LLM, Tools, Memory, Planning, Reasoning — and the 4 that make it production-ready: State, Context, Guardrails, Human-in-the-loop.</li>
+  <li>You can <b>draw the execution flow</b>: Reason → Act → Observe, with an iteration cap.</li>
+  <li>You can <b>place approval correctly</b> — before a write executes, not after the run finishes.</li>
+  <li>You can <b>build one</b> that connects to a real external API and handles a failure.</li>
 </ul>
 <div class="callout" style="margin-top:14px;"><strong>Tomorrow (Day 3):</strong> RAG — grounding agent answers in your own data.</div>
 </div></section>
+
 </div>
-<div class="controls">
-  <button id="prev" title="Previous">◀ Prev</button>
-  <button id="next" title="Next">Next ▶</button>
-  <div class="counter"><span id="cur">1</span> / <span id="total"></span></div>
-  <div class="progress"><div id="bar" style="width:0%"></div></div>
-  <button id="fs" class="fullscreen-btn" title="Fullscreen">⛶ Fullscreen</button>
-</div>
+
 <div class="controls">
   <button class="btn" id="prev" title="Previous (←)">Back</button>
   <button class="btn" id="next" title="Next (→ or space)">Next</button>
@@ -751,6 +497,7 @@ DISPATCH = {<span class="str">"get_weather"</span>: get_weather}</pre>
   <div class="counter"><span id="cur">1</span> / <span id="total"></span></div>
   <button class="btn fs" id="fs" title="Fullscreen (F)">Fullscreen</button>
 </div>
+
 <script>
 (function () {
   var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
@@ -759,7 +506,6 @@ DISPATCH = {<span class="str">"get_weather"</span>: get_weather}</pre>
   var strip = document.getElementById('strip');
   document.getElementById('total').textContent = total;
 
-  // Section chip on every content slide + one progress block per slide
   var blocks = slides.map(function (s, n) {
     var c = s.getAttribute('data-c') || '0';
     var name = s.getAttribute('data-sec');
@@ -804,65 +550,12 @@ DISPATCH = {<span class="str">"get_weather"</span>: get_weather}</pre>
 
   document.addEventListener('keydown', function (e) {
     var t = e.target && e.target.tagName;
-    if (t === 'INPUT' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return; // let sliders use arrows
     if (e.key === 'ArrowRight' || e.key === 'PageDown' || (e.key === ' ' && t !== 'SUMMARY' && t !== 'BUTTON')) { e.preventDefault(); show(idx + 1); }
     else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(idx - 1); }
     else if (e.key === 'Home') { e.preventDefault(); show(0); }
     else if (e.key === 'End') { e.preventDefault(); show(total - 1); }
     else if ((e.key === 'f' || e.key === 'F') && t !== 'INPUT') { toggleFs(); }
   });
-
-  /* ---------- temperature / top_p lab ---------- */
-  var TOKENS = [['mat', 2.0], ['floor', 1.5], ['sofa', 1.0], ['roof', 0.5], ['moon', 0.1]];
-  var barsEl = document.getElementById('bars');
-  var tempEl = document.getElementById('temp');
-  var toppEl = document.getElementById('topp');
-  var rows = TOKENS.map(function (t) {
-    var row = document.createElement('div');
-    row.className = 'bar-row';
-    row.innerHTML = '<div class="tok">' + t[0] + '<i>logit ' + t[1].toFixed(1) + '</i></div>' +
-      '<div class="bar-track"><div class="bar-fill"></div></div><div class="pct"></div>';
-    barsEl.appendChild(row);
-    return row;
-  });
-
-  function probs(T) {
-    if (T <= 0) return TOKENS.map(function (_, i) { return i === 0 ? 1 : 0; });
-    var ex = TOKENS.map(function (t) { return Math.exp(t[1] / T); });
-    var s = ex.reduce(function (a, b) { return a + b; }, 0);
-    return ex.map(function (e) { return e / s; });
-  }
-
-  function render() {
-    var T = parseFloat(tempEl.value), P = parseFloat(toppEl.value);
-    document.getElementById('tOut').textContent = T.toFixed(1);
-    document.getElementById('pOut').textContent = P.toFixed(2);
-    var pr = probs(T);
-    var order = pr.map(function (p, i) { return [p, i]; }).sort(function (a, b) { return b[0] - a[0]; });
-    var keep = {}, cum = 0;
-    for (var k = 0; k < order.length; k++) {
-      keep[order[k][1]] = true; cum += order[k][0];
-      if (cum >= P - 1e-9) break;
-    }
-    var kept = Object.keys(keep).length;
-    rows.forEach(function (row, i) {
-      row.classList.toggle('cut', !keep[i]);
-      row.querySelector('.bar-fill').style.width = (pr[i] * 100).toFixed(1) + '%';
-      row.querySelector('.pct').textContent = keep[i]
-        ? (pr[i] / cum * 100).toFixed(0) + '% chance'
-        : 'excluded';
-    });
-    var msg;
-    if (T === 0) msg = 'Temperature 0: always pick the highest-scoring token.';
-    else if (T < 0.6) msg = 'Low temperature: the distribution is sharp, so the top token wins almost every time.';
-    else if (T <= 1.1) msg = 'Around 1: the model\u2019s own probabilities, so you get natural variety.';
-    else msg = 'High temperature: the distribution flattens, so unlikely tokens get picked more often.';
-    if (P < 1) msg += ' top_p ' + P.toFixed(2) + ' keeps ' + kept + ' of ' + TOKENS.length + ' tokens and samples only from those.';
-    document.getElementById('labNote').textContent = msg;
-  }
-  tempEl.addEventListener('input', render);
-  toppEl.addEventListener('input', render);
-  render();
 
   show(0);
 })();
