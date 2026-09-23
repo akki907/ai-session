@@ -307,7 +307,7 @@
   <span class="tag c0">Day 3</span>
   <h1 aria-label="Agent Architecture & RAG"><span class="tk a" style="--i:0">Agent</span><span class="tk b" style="--i:1">Architecture</span><span class="tk c" style="--i:2">& RAG</span></h1>
   <p class="lede">From a loop to a system — building blocks, guardrails, and grounding answers in your data.</p>
-  <p class="fine">⏱ 45 minutes · 🎯 Hands-on included · Builds on prior days.</p>
+  <p class="fine">⏱ 75 minutes · 🎯 Hands-on included · Builds on prior days.</p>
 </div></section>
 <section class="slide" data-sec="Overview" data-c="0"><div class="wrap">
   
@@ -317,17 +317,17 @@
   <div class="card"><h3>Memory Types</h3><p>Short-term, long-term, episodic, procedural.</p></div>
   <div class="card"><h3>Guardrails</h3><p>Input + output filtering, policy enforcement.</p></div>
   <div class="card"><h3>Human-in-the-Loop</h3><p>Approve before writes, escalation, audit.</p></div>
-  <div class="card"><h3>RAG</h3><p>Chunking, embeddings, vector DBs, retrieval.</p></div>
-  <div class="card"><h3>RAG + Agents</h3><p>Retrieval as a tool the agent can call.</p></div>
+  <div class="card"><h3>RAG</h3><p>Ingestion &amp; retrieval pipelines, chunking, embeddings, hybrid search, reranking, query decomposition.</p></div>
+  <div class="card"><h3>RAG Variants &amp; Eval</h3><p>Agentic, Corrective, Self-RAG, Graph RAG, RAG-Fusion, HyDE — plus how to measure it.</p></div>
 </div>
 </div></section>
 <section class="slide" data-sec="Agenda" data-c="0"><div class="wrap">
   
-<h2>Today's 45 Minutes</h2>
+<h2>Today's 75 Minutes</h2>
 <div class="section-grid">
   <div class="item"><div class="num">1</div><div class="name">Recap + architecture</div><div class="time">5 min</div></div>
   <div class="item"><div class="num">2</div><div class="name">9 building blocks, memory, guardrails, HITL</div><div class="time">15 min</div></div>
-  <div class="item"><div class="num">3</div><div class="name">RAG end-to-end</div><div class="time">15 min</div></div>
+  <div class="item"><div class="num">3</div><div class="name">RAG end-to-end: pipelines, chunking, embeddings, hybrid search, reranking, decomposition, variants, eval</div><div class="time">45 min</div></div>
   <div class="item"><div class="num">4</div><div class="name">Project: Policy-Aware Helpdesk</div><div class="time">5 min</div></div>
   <div class="item"><div class="num">5</div><div class="name">Q&amp;A</div><div class="time">5 min</div></div>
 </div>
@@ -386,20 +386,143 @@
 </div></section>
 <section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
   
-<h2>Chunking, Embeddings, Vector DBs</h2>
-<table>
-  <tr><th>Strategy</th><th>Best for</th></tr>
-  <tr><td><b>Fixed size</b> (500 chars)</td><td>Uniform docs</td></tr>
-  <tr><td><b>By paragraph</b></td><td>Articles</td></tr>
-  <tr><td><b>By section</b></td><td>Manuals, policies</td></tr>
-  <tr><td><b>Semantic</b></td><td>Mixed content</td></tr>
-  <tr><td><b>Sliding window</b></td><td>Long context</td></tr>
-</table>
-<div class="callout"><strong>Rule of thumb:</strong> 200–800 tokens, 10–20% overlap.</div>
-<div class="grid grid-2" style="margin-top:14px;">
-  <div class="card"><h3>Embeddings</h3><p>Text → fixed-length vector. Similar text → similar vectors.</p></div>
-  <div class="card"><h3>Vector DBs</h3><p>pgvector · Pinecone · Weaviate · Chroma · Qdrant</p></div>
+<h2>Ingestion Pipeline in Detail</h2>
+<div class="diagram">
+  <div class="diagram-row">
+    <div class="node">Raw docs<br><span style="font-size:12px;font-weight:400;">PDF, DOCX, HTML, images</span></div>
+    <div class="arrow">→</div>
+    <div class="node alt">Parse &amp; extract<br><span style="font-size:12px;font-weight:400;">OCR for scans</span></div>
+    <div class="arrow">→</div>
+    <div class="node pink">Clean &amp; normalize</div>
+  </div>
+  <div class="arrow-row">↓</div>
+  <div class="diagram-row">
+    <div class="node alt">Chunk</div>
+    <div class="arrow">→</div>
+    <div class="node pink">Embed</div>
+    <div class="arrow">→</div>
+    <div class="node yellow">Tag metadata</div>
+    <div class="arrow">→</div>
+    <div class="node">Upsert to Vector DB</div>
+  </div>
 </div>
+<table style="margin-top:14px;">
+  <tr><th>Format</th><th>Extraction</th></tr>
+  <tr><td>PDF (text)</td><td>pdfplumber, unstructured</td></tr>
+  <tr><td>PDF (scanned)</td><td>OCR — Tesseract, Textract</td></tr>
+  <tr><td>DOCX / PPTX</td><td>python-docx, unstructured</td></tr>
+  <tr><td>HTML</td><td>trafilatura, BeautifulSoup</td></tr>
+  <tr><td>Images / diagrams</td><td>Vision model captioning</td></tr>
+</table>
+<div class="callout warn"><strong>Don't skip re-ingestion:</strong> hash each source doc; on change, delete its old chunks before re-embedding — otherwise stale and updated chunks both stay in the index, and the agent can retrieve either one.</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>Chunking Strategies</h2>
+<table>
+  <tr><th>Strategy</th><th>How it works</th><th>Best for</th></tr>
+  <tr><td><b>Fixed size</b></td><td>Split every N chars/tokens, ignoring structure</td><td>Uniform docs, quick baseline</td></tr>
+  <tr><td><b>By paragraph</b></td><td>Split on blank lines</td><td>Articles, blog posts</td></tr>
+  <tr><td><b>By section</b></td><td>Split on headings</td><td>Manuals, policies, contracts</td></tr>
+  <tr><td><b>Semantic</b></td><td>Embed sentences, split where similarity drops</td><td>Mixed or unstructured content</td></tr>
+  <tr><td><b>Sliding window</b></td><td>Fixed size with overlap between chunks</td><td>Long context, reduces boundary loss</td></tr>
+</table>
+<div class="grid grid-2" style="margin-top:14px;">
+  <div class="card"><h3>Chunks too small</h3><p>Precise matches, but each chunk lacks surrounding context — the LLM sees a fragment, not the full idea.</p></div>
+  <div class="card"><h3>Chunks too large</h3><p>More context per chunk, but retrieval gets noisy — irrelevant text dilutes the embedding and crowds the prompt.</p></div>
+</div>
+<div class="callout"><strong>Rule of thumb:</strong> 200–800 tokens per chunk, 10–20% overlap. Always keep source metadata (doc, section, page) attached to the chunk.</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>Embeddings: Dense vs Sparse</h2>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Dense (semantic)</h3>
+    <p>A neural model maps text to a fixed-length vector. Captures meaning — "car" and "automobile" land close together.</p>
+    <p class="muted" style="font-size:14px;">text-embedding-3-small/large · Cohere embed-v3 · BGE · E5</p>
+  </div>
+  <div class="card">
+    <h3>Sparse (lexical)</h3>
+    <p>A term-frequency vector — mostly zeros, one weight per vocabulary word. Exact keyword and ID matches win.</p>
+    <p class="muted" style="font-size:14px;">BM25 · TF-IDF · SPLADE</p>
+  </div>
+</div>
+<table style="margin-top:8px;">
+  <tr><th>Model</th><th>Dims</th><th>Notes</th></tr>
+  <tr><td>text-embedding-3-small</td><td>1536</td><td>Cheap default, strong baseline</td></tr>
+  <tr><td>text-embedding-3-large</td><td>3072</td><td>Higher recall, higher storage cost</td></tr>
+  <tr><td>bge-large / e5-large</td><td>1024</td><td>Open source, self-hosted</td></tr>
+</table>
+<div class="callout warn"><strong>Blind spot:</strong> dense embeddings can miss exact terms — order IDs, error codes, SKUs — because they're optimized for meaning, not surface form. Hybrid search closes that gap.</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="2"><div class="wrap">
+  
+<h2>Hybrid Search: Dense + Sparse</h2>
+<div class="diagram">
+  <div class="node">Query</div>
+  <div class="arrow-row">↓ run both, in parallel</div>
+  <div class="diagram-row">
+    <div class="node alt">Vector Search<br><span style="font-size:12px;font-weight:400;">semantic, top-k</span></div>
+    <div class="node pink">BM25 Search<br><span style="font-size:12px;font-weight:400;">keyword, top-k</span></div>
+  </div>
+  <div class="arrow-row">↓ fuse the two rankings</div>
+  <div class="node yellow">Reciprocal Rank Fusion (RRF)</div>
+  <div class="arrow-row">↓</div>
+  <div class="node">Merged Top-k</div>
+</div>
+<table style="margin-top:14px;">
+  <tr><th></th><th>Vector only</th><th>BM25 only</th><th>Hybrid</th></tr>
+  <tr><td>Paraphrases</td><td>Good</td><td>Poor</td><td>Good</td></tr>
+  <tr><td>Exact IDs / codes</td><td>Poor</td><td>Good</td><td>Good</td></tr>
+  <tr><td>Rare / technical terms</td><td>Fair</td><td>Good</td><td>Good</td></tr>
+</table>
+<div class="callout good"><strong>Rule of thumb:</strong> hybrid search is the production default for technical or domain-specific corpora — the two signals cover each other's blind spots. Most vector DBs (Qdrant, Weaviate, pgvector + tsvector) support it natively.</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="2"><div class="wrap">
+  
+<h2>Reranking: A Second, Smarter Pass</h2>
+<div class="diagram">
+  <div class="diagram-row">
+    <div class="node">Query</div>
+    <div class="arrow">→</div>
+    <div class="node alt">Retrieve top 50–100<br><span style="font-size:12px;font-weight:400;">fast bi-encoder</span></div>
+    <div class="arrow">→</div>
+    <div class="node pink">Cross-encoder rerank<br><span style="font-size:12px;font-weight:400;">query + doc scored jointly</span></div>
+    <div class="arrow">→</div>
+    <div class="node yellow">Top 3–5 → LLM</div>
+  </div>
+</div>
+<table style="margin-top:14px;">
+  <tr><th></th><th>Bi-encoder (retrieval)</th><th>Cross-encoder (rerank)</th></tr>
+  <tr><td>Encodes</td><td>Query and docs separately</td><td>Query + doc together</td></tr>
+  <tr><td>Speed</td><td>Fast — doc vectors precomputed</td><td>Slow — one pass per candidate</td></tr>
+  <tr><td>Accuracy</td><td>Approximate</td><td>High precision</td></tr>
+  <tr><td>Scale</td><td>Millions of docs</td><td>Tens to hundreds of candidates</td></tr>
+</table>
+<pre style="margin-top:8px;"><span class="kw">from</span> sentence_transformers <span class="kw">import</span> CrossEncoder
+
+reranker = CrossEncoder(<span class="str">"cross-encoder/ms-marco-MiniLM-L-6-v2"</span>)
+pairs = [[query, doc] <span class="kw">for</span> doc <span class="kw">in</span> candidates]
+scores = reranker.predict(pairs)
+top_docs = [d <span class="kw">for</span> _, d <span class="kw">in</span>
+            <span class="fn">sorted</span>(<span class="fn">zip</span>(scores, candidates), reverse=<span class="kw">True</span>)][:<span class="num">5</span>]
+</pre>
+<div class="callout"><strong>Retrieve broad, rerank narrow.</strong> Cheap retrieval casts a wide net for recall; reranking spends compute only on the shortlist for precision — which is why it runs second, not first.</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>Vector Databases</h2>
+<p class="muted">Where the chunk vectors — and their metadata — actually live.</p>
+<table>
+  <tr><th>Option</th><th>Notes</th></tr>
+  <tr><td>pgvector</td><td>Postgres extension — one database for app + vectors, easy ops</td></tr>
+  <tr><td>Pinecone</td><td>Managed, serverless, built-in hybrid search</td></tr>
+  <tr><td>Weaviate</td><td>Open source or managed, native hybrid + reranking modules</td></tr>
+  <tr><td>Chroma</td><td>Lightweight, great for local dev and prototyping</td></tr>
+  <tr><td>Qdrant</td><td>Open source, fast filtering, native hybrid search</td></tr>
+</table>
+<div class="callout"><strong>Pick by ops burden, not benchmarks first:</strong> if you already run Postgres, pgvector often wins on simplicity even without the raw throughput of a dedicated vector DB.</div>
 </div></section>
 <section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
   
@@ -430,6 +553,45 @@
     <div class="callout good" style="margin-top:8px;"><strong>Default to RAG.</strong></div>
   </div>
 </div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="2"><div class="wrap">
+  
+<h2>Retrieval Pipeline in Detail</h2>
+<ol class="steps">
+  <li><b>Query understanding</b> — rewrite ambiguous questions, extract filters (date, department, doc type).</li>
+  <li><b>Embed the query</b> — keep the raw text too, for the BM25 side.</li>
+  <li><b>Hybrid search</b> — vector + BM25 in parallel, fused with RRF.</li>
+  <li><b>Metadata filter</b> — apply access control and scope filters before or after search.</li>
+  <li><b>Rerank</b> — cross-encoder narrows top-50 to top-5 by true relevance.</li>
+  <li><b>Assemble context</b> — dedupe overlapping chunks, order by relevance, fit the token budget.</li>
+  <li><b>Generate</b> — LLM answers using only the assembled context, citing sources.</li>
+</ol>
+<div class="callout"><strong>Every earlier slide is a stage here:</strong> chunking and embeddings feed steps 1–2, hybrid search is step 3, metadata filtering is step 4, reranking is step 5. Retrieval is a pipeline, not a single call.</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="2"><div class="wrap">
+  
+<h2>Query Decomposition</h2>
+<p class="muted">Step 1 of the retrieval pipeline, zoomed in — for questions no single chunk can answer.</p>
+<div class="diagram">
+  <div class="node">Complex query</div>
+  <div class="arrow-row">↓ LLM decomposes</div>
+  <div class="diagram-row">
+    <div class="node alt">Sub-question 1</div>
+    <div class="node alt">Sub-question 2</div>
+    <div class="node alt">Sub-question 3</div>
+  </div>
+  <div class="arrow-row">↓ retrieve independently for each</div>
+  <div class="node pink">Per-question context</div>
+  <div class="arrow-row">↓</div>
+  <div class="node yellow">Synthesize final answer</div>
+</div>
+<table style="margin-top:14px;">
+  <tr><th>Pattern</th><th>Example</th></tr>
+  <tr><td>Comparison</td><td>"Compare X and Y's Q3 revenue" → retrieve X, retrieve Y, compare</td></tr>
+  <tr><td>Multi-part</td><td>"What is A, and how does it affect B?" → sub-q for A, sub-q for A's effect on B</td></tr>
+  <tr><td>Multi-hop</td><td>"Who manages the person who wrote the Q3 report?" → resolve author → resolve their manager</td></tr>
+</table>
+<div class="callout"><strong>Not the same as query rewriting.</strong> Rewriting turns one vague query into one better query; decomposition turns one query into several independently-retrievable sub-queries, then synthesizes — the mechanism behind multi-hop RAG.</div>
 </div></section>
 <section class="slide" data-sec="Code" data-c="3"><div class="wrap">
   
@@ -492,6 +654,122 @@ A:"</span>
     <span class="kw">return</span> json.dumps(res[<span class="str">"documents"</span>][<span class="num">0</span>])
 </pre>
 <div class="callout good">The agent decides when to call <code>search_hr_policy</code> based on the user's question.</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="2"><div class="wrap">
+
+<h2>Agentic RAG: Retrieval as a Loop</h2>
+<div class="diagram">
+  <div class="diagram-row">
+    <div class="node">Query</div>
+    <div class="arrow">→</div>
+    <div class="node pink">Retrieve</div>
+    <div class="arrow">→</div>
+    <div class="node alt">Reason: enough?</div>
+  </div>
+  <div class="arrow-row">↓ no — reformulate &amp; retrieve again</div>
+  <div class="diagram-row">
+    <div class="node gray">Rewrite query</div>
+    <div class="arrow">→</div>
+    <div class="node pink">Retrieve</div>
+    <div class="arrow">→</div>
+    <div class="node alt">Reason: enough?</div>
+  </div>
+  <div class="arrow-row">↓ yes</div>
+  <div class="node yellow">Grounded Answer</div>
+</div>
+<div class="grid grid-2" style="margin-top:14px;">
+  <div class="card">
+    <h3>Naive RAG</h3>
+    <ul>
+      <li>One retrieval pass, fixed <code>k</code></li>
+      <li>No check on result quality</li>
+      <li>Fails silently on multi-hop questions</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Agentic RAG</h3>
+    <ul>
+      <li>Agent decides <em>if</em>, <em>when</em>, and <em>how</em> to retrieve</li>
+      <li>Can rewrite the query, retrieve again, or call other tools</li>
+      <li>Stops once it judges the context sufficient</li>
+    </ul>
+  </div>
+</div>
+<div class="callout"><strong>Same building block, more autonomy.</strong> Retrieval stops being a fixed step in a pipeline and becomes a tool the agent's reasoning loop calls — possibly more than once, possibly alongside <code>get_employee</code> or <code>create_ticket</code> — until it decides it has enough grounding to answer.</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="2"><div class="wrap">
+  
+<h2>Beyond Naive RAG: Variants</h2>
+<table>
+  <tr><th>Variant</th><th>Core idea</th><th>Best for</th></tr>
+  <tr><td><b>Naive RAG</b></td><td>One retrieve, one generate</td><td>Baseline, simple FAQs</td></tr>
+  <tr><td><b>Agentic RAG</b></td><td>Agent decides if/when/how to retrieve, can loop</td><td>Multi-step tasks, tool-using agents</td></tr>
+  <tr><td><b>Corrective RAG (CRAG)</b></td><td>Grades retrieved docs; weak results trigger web search or query rewrite</td><td>Sparse or unreliable knowledge bases</td></tr>
+  <tr><td><b>Self-RAG</b></td><td>Model critiques its own retrieval and answer, retrieves again if needed</td><td>High-stakes accuracy, self-correction</td></tr>
+  <tr><td><b>RAG-Fusion</b></td><td>Generates several query variations, retrieves for each, fuses with RRF</td><td>Ambiguous or under-specified questions</td></tr>
+  <tr><td><b>Multi-hop RAG</b></td><td>Chains retrieval steps — each answer feeds the next query</td><td>Questions needing several linked facts</td></tr>
+  <tr><td><b>Graph RAG</b></td><td>Retrieves over a knowledge graph of entities and relations, not just similarity</td><td>Relationship-heavy, multi-hop domains (orgs, supply chains)</td></tr>
+  <tr><td><b>HyDE</b></td><td>LLM drafts a hypothetical answer first, embeds that instead of the raw query</td><td>Short or vague queries with poor lexical overlap</td></tr>
+</table>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="2"><div class="wrap">
+  
+<h2>Corrective RAG &amp; Graph RAG</h2>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Corrective RAG (CRAG)</h3>
+    <p>A lightweight grader scores each retrieved chunk as correct, ambiguous, or incorrect before generation.</p>
+    <div class="diagram" style="padding:14px;">
+      <div class="node">Retrieve</div>
+      <div class="arrow-row">↓</div>
+      <div class="node alt">Grade relevance</div>
+      <div class="arrow-row">↓ weak → web search / rewrite</div>
+      <div class="node yellow">Generate</div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Graph RAG</h3>
+    <p>Documents are first mined into a knowledge graph — entities and their relationships — then retrieval traverses the graph, not just embedding similarity.</p>
+    <div class="diagram" style="padding:14px;">
+      <div class="node">Docs → entities + relations</div>
+      <div class="arrow-row">↓</div>
+      <div class="node alt">Build knowledge graph</div>
+      <div class="arrow-row">↓ query traverses edges</div>
+      <div class="node yellow">Multi-hop answer</div>
+    </div>
+  </div>
+</div>
+<div class="callout"><strong>Why they exist:</strong> vector similarity alone can't tell you a retrieved chunk is wrong (CRAG fixes that), or connect facts spread across many documents through relationships rather than wording (Graph RAG fixes that).</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>Evaluating RAG</h2>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Retrieval quality</h3>
+    <ul>
+      <li><b>Precision@k</b> — of the top-k chunks, how many are relevant</li>
+      <li><b>Recall@k</b> — of all relevant chunks, how many made the top-k</li>
+      <li><b>MRR</b> — how high the first relevant chunk ranks</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Generation quality</h3>
+    <ul>
+      <li><b>Faithfulness</b> — does the answer stick to retrieved context, no hallucination</li>
+      <li><b>Answer relevance</b> — does it actually address the question</li>
+      <li><b>Context precision/recall</b> — did retrieval feed the generator the right chunks, and only those</li>
+    </ul>
+  </div>
+</div>
+<table style="margin-top:8px;">
+  <tr><th>Tool</th><th>Focus</th></tr>
+  <tr><td>RAGAS</td><td>Faithfulness, context precision/recall, answer relevance</td></tr>
+  <tr><td>TruLens</td><td>Groundedness, relevance, tracing</td></tr>
+  <tr><td>DeepEval / LangSmith</td><td>Unit-test style eval, regression suites</td></tr>
+</table>
+<div class="callout"><strong>LLM-as-judge:</strong> hand-labeling every answer doesn't scale, so most pipelines score faithfulness and relevance with a second, stronger LLM against a rubric — then sample-check that judge against human ratings.</div>
+<div class="callout good"><strong>Build a golden set:</strong> 30–50 representative Q&amp;A pairs with known-correct sources. Run it on every pipeline change — chunk size, embedding model, reranker — before shipping.</div>
 </div></section>
 <section class="slide" data-sec="Hands-on" data-c="4"><div class="wrap">
   
@@ -574,58 +852,6 @@ A:"</span>
     else if (e.key === 'End') { e.preventDefault(); show(total - 1); }
     else if ((e.key === 'f' || e.key === 'F') && t !== 'INPUT') { toggleFs(); }
   });
-
-  /* ---------- temperature / top_p lab ---------- */
-  var TOKENS = [['mat', 2.0], ['floor', 1.5], ['sofa', 1.0], ['roof', 0.5], ['moon', 0.1]];
-  var barsEl = document.getElementById('bars');
-  var tempEl = document.getElementById('temp');
-  var toppEl = document.getElementById('topp');
-  var rows = TOKENS.map(function (t) {
-    var row = document.createElement('div');
-    row.className = 'bar-row';
-    row.innerHTML = '<div class="tok">' + t[0] + '<i>logit ' + t[1].toFixed(1) + '</i></div>' +
-      '<div class="bar-track"><div class="bar-fill"></div></div><div class="pct"></div>';
-    barsEl.appendChild(row);
-    return row;
-  });
-
-  function probs(T) {
-    if (T <= 0) return TOKENS.map(function (_, i) { return i === 0 ? 1 : 0; });
-    var ex = TOKENS.map(function (t) { return Math.exp(t[1] / T); });
-    var s = ex.reduce(function (a, b) { return a + b; }, 0);
-    return ex.map(function (e) { return e / s; });
-  }
-
-  function render() {
-    var T = parseFloat(tempEl.value), P = parseFloat(toppEl.value);
-    document.getElementById('tOut').textContent = T.toFixed(1);
-    document.getElementById('pOut').textContent = P.toFixed(2);
-    var pr = probs(T);
-    var order = pr.map(function (p, i) { return [p, i]; }).sort(function (a, b) { return b[0] - a[0]; });
-    var keep = {}, cum = 0;
-    for (var k = 0; k < order.length; k++) {
-      keep[order[k][1]] = true; cum += order[k][0];
-      if (cum >= P - 1e-9) break;
-    }
-    var kept = Object.keys(keep).length;
-    rows.forEach(function (row, i) {
-      row.classList.toggle('cut', !keep[i]);
-      row.querySelector('.bar-fill').style.width = (pr[i] * 100).toFixed(1) + '%';
-      row.querySelector('.pct').textContent = keep[i]
-        ? (pr[i] / cum * 100).toFixed(0) + '% chance'
-        : 'excluded';
-    });
-    var msg;
-    if (T === 0) msg = 'Temperature 0: always pick the highest-scoring token.';
-    else if (T < 0.6) msg = 'Low temperature: the distribution is sharp, so the top token wins almost every time.';
-    else if (T <= 1.1) msg = 'Around 1: the model\u2019s own probabilities, so you get natural variety.';
-    else msg = 'High temperature: the distribution flattens, so unlikely tokens get picked more often.';
-    if (P < 1) msg += ' top_p ' + P.toFixed(2) + ' keeps ' + kept + ' of ' + TOKENS.length + ' tokens and samples only from those.';
-    document.getElementById('labNote').textContent = msg;
-  }
-  tempEl.addEventListener('input', render);
-  toppEl.addEventListener('input', render);
-  render();
 
   show(0);
 })();
