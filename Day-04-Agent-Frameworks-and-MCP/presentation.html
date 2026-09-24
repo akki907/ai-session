@@ -306,7 +306,7 @@
 <section class="slide title-slide active"><div class="wrap">
   <span class="tag c0">Day 4</span>
   <h1 aria-label="Frameworks & Multi-Agent Systems"><span class="tk a" style="--i:0">Frameworks</span><span class="tk b" style="--i:1">&</span><span class="tk c" style="--i:2">Multi-Agent Systems</span></h1>
-  <p class="lede">LangChain · LangGraph · CrewAI · MCP — and when to use multiple agents instead of one.</p>
+  <p class="lede">LangChain · LangGraph · CrewAI · Temporal · MCP — and when to use multiple agents instead of one.</p>
   <p class="fine">⏱ 45 minutes · 🎯 Hands-on included · Builds on prior days.</p>
 </div></section>
 <section class="slide" data-sec="Overview" data-c="0"><div class="wrap">
@@ -316,21 +316,26 @@
   <div class="card"><h3>LangChain</h3><p>Prompts, tools, agents, retrievers.</p></div>
   <div class="card"><h3>LangGraph</h3><p>State, nodes, edges, conditional routing, loops, checkpoints, HITL.</p></div>
   <div class="card"><h3>CrewAI</h3><p>Agents, tasks, crews, processes, delegation.</p></div>
-  <div class="card"><h3>MCP</h3><p>Client, server, tools, resources, JSON-RPC, streamable HTTP.</p></div>
+  <div class="card"><h3>Temporal</h3><p>Durable execution — workflows, activities, workers, signals, retries.</p></div>
+  <div class="card"><h3>MCP</h3><p>Client, server, tools, resources, prompts, sampling, JSON-RPC.</p></div>
+  <div class="card"><h3>A2A Protocol</h3><p>Agent-to-agent discovery, task delegation, cross-vendor interop.</p></div>
+  <div class="card"><h3>Observability &amp; Evaluation</h3><p>Tracing agent runs, defining "good," catching regressions.</p></div>
   <div class="card"><h3>Single vs Multi-Agent</h3><p>When to split, topologies, communication.</p></div>
   <div class="card"><h3>Project: Research Crew</h3><p>Planner → Researcher → Reviewer.</p></div>
 </div>
 </div></section>
 <section class="slide" data-sec="Agenda" data-c="0"><div class="wrap">
   
-<h2>Today's 45 Minutes</h2>
+<h2>Today's Session (Extended)</h2>
 <div class="section-grid">
   <div class="item"><div class="num">1</div><div class="name">Framework overview</div><div class="time">5 min</div></div>
-  <div class="item"><div class="num">2</div><div class="name">LangChain · LangGraph · CrewAI · MCP</div><div class="time">15 min</div></div>
+  <div class="item"><div class="num">2</div><div class="name">LangChain · LangGraph · CrewAI · MCP · Temporal</div><div class="time">20 min</div></div>
   <div class="item"><div class="num">3</div><div class="name">Multi-agent patterns</div><div class="time">15 min</div></div>
-  <div class="item"><div class="num">4</div><div class="name">Project: Autonomous Research Crew</div><div class="time">5 min</div></div>
-  <div class="item"><div class="num">5</div><div class="name">Discussion + Q&amp;A</div><div class="time">5 min</div></div>
+  <div class="item"><div class="num">4</div><div class="name">Observability, evaluation &amp; A2A</div><div class="time">15 min</div></div>
+  <div class="item"><div class="num">5</div><div class="name">Project: Autonomous Research Crew</div><div class="time">5 min</div></div>
+  <div class="item"><div class="num">6</div><div class="name">Discussion + Q&amp;A</div><div class="time">5 min</div></div>
 </div>
+<p class="muted">Runs longer than a single 45-minute block now — a natural split point is after Multi-Agent Patterns.</p>
 </div></section>
 <section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
   
@@ -355,11 +360,18 @@
   </div>
   <div class="arrow-row">↓</div>
   <div class="diagram-row">
-    <div class="node yellow">MCP</div>
+    <div class="node yellow">Temporal</div>
+    <div class="arrow">↓</div>
+    <div class="node gray">Durable execution for long-running, fault-tolerant workflows</div>
+  </div>
+  <div class="arrow-row">↓</div>
+  <div class="diagram-row">
+    <div class="node gray">MCP</div>
     <div class="arrow">↓</div>
     <div class="node">Standardized tool / context integration</div>
   </div>
 </div>
+<div class="note"><strong>These aren't rungs on a ladder</strong> — LangGraph and Temporal solve orchestration at different layers (in-process graph vs. durable, cross-process workflow), and MCP is orthogonal to all of them: it standardizes how <em>any</em> of these frameworks reach a tool.</div>
 </div></section>
 <section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
   
@@ -390,6 +402,36 @@
 </div></section>
 <section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
   
+<h2>LangGraph Components, One Level Deeper</h2>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>State &amp; reducers</h3>
+    <p>State is a <code>TypedDict</code> (or Pydantic model). Fields can carry a reducer via <code>Annotated[list, add]</code> so concurrent nodes <em>merge</em> into a field instead of overwriting it — essential for parallel fan-out.</p>
+  </div>
+  <div class="card">
+    <h3>Command</h3>
+    <p><code>Command(goto=..., update=...)</code> lets a node update state <em>and</em> choose the next node in one return value — replaces separate conditional-edge functions when the logic lives naturally inside the node.</p>
+  </div>
+  <div class="card">
+    <h3>Send</h3>
+    <p><code>Send(node, state)</code> dynamically fans a single node out into N parallel invocations with different inputs — the map step of a map-reduce over an unknown-length list.</p>
+  </div>
+  <div class="card">
+    <h3>Subgraphs</h3>
+    <p>A compiled graph can be embedded as a node in a parent graph, with its own state schema — how you compose multi-agent systems out of smaller, independently testable graphs.</p>
+  </div>
+  <div class="card">
+    <h3>Checkpointer</h3>
+    <p><code>MemorySaver</code>, <code>SqliteSaver</code>, or a Postgres-backed saver persist state after every super-step, keyed by <code>thread_id</code> — this is what makes pause/resume and HITL possible.</p>
+  </div>
+  <div class="card">
+    <h3>Streaming modes</h3>
+    <p><code>stream_mode="values"</code> streams full state after each step; <code>"updates"</code> streams only the diff; <code>"messages"</code> streams LLM tokens as they're generated.</p>
+  </div>
+</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
 <h2>CrewAI &amp; MCP</h2>
 <div class="grid grid-2">
   <div class="card">
@@ -415,6 +457,365 @@
   </div>
 </div>
 <div class="callout good"><strong>Why MCP?</strong> One standard for any tool — reuse across Claude, GPT, LangGraph, IDEs.</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>MCP — How a Tool Call Actually Flows</h2>
+<div class="diagram">
+  <div class="diagram-row">
+    <div class="node">Host app<span></span></div>
+    <div class="arrow">↔</div>
+    <div class="node alt">MCP Client</div>
+    <div class="arrow">↔</div>
+    <div class="node pink">MCP Server</div>
+    <div class="arrow">↔</div>
+    <div class="node yellow">External system</div>
+  </div>
+</div>
+<ol class="steps">
+  <li><b>Discovery</b> — client asks the server for its list of tools/resources; server replies with JSON Schemas describing each one.</li>
+  <li><b>Selection</b> — the LLM decides, from the user's request, which tool to call and with what arguments.</li>
+  <li><b>Invocation</b> — client sends a JSON-RPC <code>tools/call</code> request over streamable HTTP (or stdio locally).</li>
+  <li><b>Execution</b> — the server runs the real logic (hits an API, queries a DB, reads a file) and returns a structured result.</li>
+  <li><b>Grounding</b> — the result is appended to the conversation so the model can use it in its final answer.</li>
+</ol>
+<div class="note"><strong>Tools vs Resources vs Prompts:</strong> tools are actions the model can invoke; resources are read-only context the host can attach (a file, a row, a doc); prompts are reusable, server-defined prompt templates the host can surface to the user.</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>MCP — The Full Primitive Set</h2>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Server → Client primitives</h3>
+    <ul>
+      <li><b>Tools</b> — invocable functions with a JSON Schema for arguments</li>
+      <li><b>Resources</b> — addressable, read-only context (URIs like <code>file://</code>, <code>db://</code>)</li>
+      <li><b>Prompts</b> — parameterized prompt templates the server exposes for reuse</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Client → Server primitives</h3>
+    <ul>
+      <li><b>Sampling</b> — server asks the client's LLM to complete something, without holding its own API key</li>
+      <li><b>Roots</b> — client tells the server which directories/URIs it's allowed to operate in</li>
+      <li><b>Elicitation</b> — server asks the client to collect a missing piece of input from the user mid-call</li>
+    </ul>
+  </div>
+</div>
+<h3>Transports</h3>
+<table>
+  <tr><th>Transport</th><th>Use case</th></tr>
+  <tr><td>stdio</td><td>Local process — server runs on the same machine as the client (most dev/desktop setups)</td></tr>
+  <tr><td>Streamable HTTP</td><td>Remote server — supports auth headers, resumable streams, works behind a load balancer</td></tr>
+  <tr><td>SSE (legacy)</td><td>Older HTTP transport, being superseded by streamable HTTP</td></tr>
+</table>
+<div class="note"><strong>Handshake:</strong> every session opens with an <code>initialize</code> request/response where client and server exchange protocol versions and declare which capabilities (tools, resources, sampling, roots) they each support.</div>
+</div></section>
+<section class="slide" data-sec="Code" data-c="3"><div class="wrap">
+  
+<h2>A Minimal MCP Server</h2>
+<pre><span class="kw">from</span> mcp.server.fastmcp <span class="kw">import</span> FastMCP
+
+mcp = FastMCP(<span class="str">"docs-server"</span>)
+
+<span class="fn">@mcp.tool</span>()
+<span class="kw">def</span> <span class="fn">search_docs</span>(query: str, top_k: int = <span class="num">5</span>) -> list[dict]:
+    <span class="str">"""Search internal documentation and return matching chunks."""</span>
+    <span class="kw">return</span> vector_store.search(query, k=top_k)
+
+<span class="fn">@mcp.resource</span>(<span class="str">"docs://{doc_id}"</span>)
+<span class="kw">def</span> <span class="fn">get_doc</span>(doc_id: str) -> str:
+    <span class="str">"""Expose a single document as read-only context."""</span>
+    <span class="kw">return</span> load_document(doc_id)
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="com"># Runs over stdio by default; use mcp.run(transport="streamable-http") for remote</span>
+    mcp.run()
+</pre>
+<div class="note good"><strong>Note:</strong> the <code>@mcp.tool</code> decorator turns the function's type hints and docstring directly into the JSON Schema the client sees during discovery — no schema to hand-write.</div>
+</div></section>
+<section class="slide" data-sec="Patterns" data-c="4"><div class="wrap">
+  
+<h2>Single Agent or Multi-Agent?</h2>
+<p class="muted">Default to one agent. Split only when a single agent's context, tools, or judgement genuinely can't do the whole job well.</p>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Stay single-agent when</h3>
+    <ul>
+      <li>The task fits in one clear role and one tool set</li>
+      <li>Steps are short and don't need specialised expertise per step</li>
+      <li>Debuggability matters more than parallelism</li>
+      <li>Latency and cost budgets are tight</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Split into multiple agents when</h3>
+    <ul>
+      <li>Distinct roles need different prompts, tools, or models</li>
+      <li>Sub-tasks can run in parallel (research from 3 sources)</li>
+      <li>You want an independent reviewer/critic step</li>
+      <li>A single context window would get too large or noisy</li>
+    </ul>
+  </div>
+</div>
+<div class="callout warn"><strong>Common trap:</strong> splitting a simple task into agents just because a framework makes it easy — more agents means more latency, more cost, and more places for errors to compound.</div>
+</div></section>
+<section class="slide" data-sec="Patterns" data-c="4"><div class="wrap">
+  
+<h2>Multi-Agent Topologies</h2>
+<div class="grid grid-3">
+  <div class="card">
+    <h3>Sequential (pipeline)</h3>
+    <p>Planner → Researcher → Reviewer. Each agent's output is the next one's input. Simple to reason about and debug.</p>
+  </div>
+  <div class="card">
+    <h3>Hierarchical (manager)</h3>
+    <p>A manager/orchestrator agent decomposes the task and delegates to worker agents, then merges their results.</p>
+  </div>
+  <div class="card">
+    <h3>Network (peer-to-peer)</h3>
+    <p>Agents can call each other directly with no fixed order — flexible, but harder to trace and more prone to loops.</p>
+  </div>
+</div>
+<table>
+  <tr><th>Topology</th><th>CrewAI</th><th>LangGraph</th></tr>
+  <tr><td>Sequential</td><td><code>Process.sequential</code></td><td>Linear chain of <code>add_edge</code></td></tr>
+  <tr><td>Hierarchical</td><td><code>Process.hierarchical</code></td><td>A supervisor node routes via conditional edges</td></tr>
+  <tr><td>Network</td><td>Manual delegation between agents</td><td>Nodes with edges back to a router node</td></tr>
+</table>
+</div></section>
+<section class="slide" data-sec="Patterns" data-c="4"><div class="wrap">
+  
+<h2>How Agents Share Context</h2>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Shared state (LangGraph)</h3>
+    <p>All nodes read/write one typed state object. Simple and traceable, but every agent sees the full state — can get noisy at scale.</p>
+  </div>
+  <div class="card">
+    <h3>Message passing (CrewAI tasks)</h3>
+    <p>Each agent only receives what the previous task explicitly outputs. Keeps context focused, but information not passed forward is lost.</p>
+  </div>
+  <div class="card">
+    <h3>Blackboard</h3>
+    <p>A shared, structured store (not just chat history) that any agent can read from or post to — useful when agents work asynchronously.</p>
+  </div>
+  <div class="card">
+    <h3>Direct delegation</h3>
+    <p>One agent calls another agent as if it were a tool, waits for the reply, and continues — good for a manager/worker relationship.</p>
+  </div>
+</div>
+<div class="note"><strong>Design question to ask every time:</strong> does the next agent need everything so far, or just the distilled result? Passing raw history everywhere is the fastest way to blow your context budget.</div>
+</div></section>
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  
+<h2>Temporal — Durable Execution for Agents</h2>
+<p class="muted">LangGraph and CrewAI orchestrate <em>within</em> a process. Temporal orchestrates <em>across</em> process restarts, deploys, and days — the layer you reach for once an agent workflow has to survive a crash or wait on a human for hours.</p>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Workflow</h3>
+    <p>Deterministic orchestration code — the "what happens in what order." Temporal replays its event history to reconstruct state after any failure, so it must be deterministic.</p>
+  </div>
+  <div class="card">
+    <h3>Activity</h3>
+    <p>The actual side-effecting work — an LLM call, an API request, a DB write. Non-deterministic code (network calls, randomness) always lives in an Activity, never in the Workflow.</p>
+  </div>
+  <div class="card">
+    <h3>Worker</h3>
+    <p>A process that polls a Task Queue and executes Workflow and Activity code. You scale by running more Workers, not by changing the Workflow.</p>
+  </div>
+  <div class="card">
+    <h3>Signals &amp; Queries</h3>
+    <p>Signals push data <em>into</em> a running Workflow (e.g. "human approved step 3"); Queries read a running Workflow's state without changing it.</p>
+  </div>
+  <div class="card">
+    <h3>Durable timers</h3>
+    <p><code>workflow.sleep(days=3)</code> costs nothing while waiting — no polling, no cron — and survives Worker restarts.</p>
+  </div>
+  <div class="card">
+    <h3>Retry policies</h3>
+    <p>Every Activity gets automatic, configurable retries with backoff — an LLM call or tool call failing transiently doesn't fail the whole agent run.</p>
+  </div>
+</div>
+</div></section>
+<section class="slide" data-sec="Code" data-c="3"><div class="wrap">
+  
+<h2>Temporal — A Durable Agent Loop</h2>
+<pre><span class="kw">from</span> temporalio <span class="kw">import</span> workflow, activity
+<span class="kw">from</span> datetime <span class="kw">import</span> timedelta
+
+<span class="fn">@activity.defn</span>
+<span class="kw">async def</span> <span class="fn">call_llm</span>(prompt: str) -> str:
+    <span class="kw">return</span> <span class="kw">await</span> llm_client.complete(prompt)  <span class="com"># non-deterministic: lives in an Activity</span>
+
+<span class="fn">@activity.defn</span>
+<span class="kw">async def</span> <span class="fn">run_tool</span>(name: str, args: dict) -> dict:
+    <span class="kw">return</span> <span class="kw">await</span> tool_registry[name](**args)
+
+<span class="fn">@workflow.defn</span>
+<span class="kw">class</span> <span class="fn">AgentWorkflow</span>:
+    <span class="fn">@workflow.run</span>
+    <span class="kw">async def</span> <span class="fn">run</span>(self, task: str) -> str:
+        plan = <span class="kw">await</span> workflow.execute_activity(
+            call_llm, task, start_to_close_timeout=timedelta(minutes=<span class="num">2</span>))
+
+        <span class="com"># Durable wait — survives restarts, costs nothing while parked</span>
+        <span class="kw">await</span> workflow.wait_condition(<span class="kw">lambda</span>: self.approved, timeout=timedelta(days=<span class="num">3</span>))
+
+        result = <span class="kw">await</span> workflow.execute_activity(
+            run_tool, {<span class="str">"name"</span>: <span class="str">"search"</span>, <span class="str">"args"</span>: {<span class="str">"q"</span>: plan}},
+            start_to_close_timeout=timedelta(minutes=<span class="num">1</span>),
+            retry_policy=RetryPolicy(maximum_attempts=<span class="num">3</span>))
+        <span class="kw">return</span> result
+
+    <span class="fn">@workflow.signal</span>
+    <span class="kw">def</span> <span class="fn">approve</span>(self):
+        self.approved = <span class="kw">True</span>  <span class="com"># a human (or another system) unblocks the wait</span>
+</pre>
+</div></section>
+<section class="slide" data-sec="Patterns" data-c="4"><div class="wrap">
+  
+<h2>LangGraph vs Temporal — Different Layers</h2>
+<table>
+  <tr><th>Concern</th><th class="good">LangGraph</th><th class="good">Temporal</th></tr>
+  <tr><td>Runs where</td><td>In-process, in memory (checkpointer optional)</td><td>Across processes; durable by default</td></tr>
+  <tr><td>Survives a crash?</td><td>Only if you wired a persistent checkpointer</td><td>Always — replays event history automatically</td></tr>
+  <tr><td>Best for</td><td>Rich conditional agent logic, fast iteration, single-service deploys</td><td>Long-running, multi-day, human-in-the-loop, must-not-lose-a-step workflows</td></tr>
+  <tr><td>Retries</td><td>Manual, per-node</td><td>Built into every Activity via policy</td></tr>
+  <tr><td>Typical pairing</td><td colspan="2">LangGraph runs the agent's reasoning <em>inside</em> a Temporal Activity — Temporal handles durability and retries around it</td></tr>
+</table>
+</div></section>
+<section class="slide" data-sec="Observability" data-c="5"><div class="wrap">
+  
+<h2>Observability — Seeing Inside an Agent Run</h2>
+<p class="muted">A chatbot failure is one bad reply. An agent failure can be a wrong tool call, a bad plan, or a loop that burns budget — you can't fix what you can't see happen, step by step.</p>
+<div class="diagram">
+  <div class="diagram-row">
+    <div class="node">Trace</div>
+    <div class="arrow">→</div>
+    <div class="node alt">Span: plan</div>
+    <div class="arrow">→</div>
+    <div class="node pink">Span: tool call</div>
+    <div class="arrow">→</div>
+    <div class="node yellow">Span: LLM call</div>
+    <div class="arrow">→</div>
+    <div class="node">Span: final answer</div>
+  </div>
+</div>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>What each span should carry</h3>
+    <ul>
+      <li>Input and output for that step</li>
+      <li>Latency and token/dollar cost</li>
+      <li>Tool name, arguments, and raw result</li>
+      <li>Model name, temperature, and prompt version</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Where it's captured</h3>
+    <ul>
+      <li><b>OpenTelemetry</b> — vendor-neutral tracing standard; instruments any framework</li>
+      <li><b>LangSmith</b> — native tracing for LangChain/LangGraph runs</li>
+      <li><b>Temporal Web UI</b> — every Workflow's full event history, replayable</li>
+      <li><b>CrewAI callbacks / <code>step_callback</code></b> — per-task and per-agent hooks</li>
+    </ul>
+  </div>
+</div>
+<div class="note">Ties directly into <b>causal trace analysis</b>: once every step is a span with inputs/outputs, you can trace <em>why</em> a specific downstream failure happened, not just <em>that</em> it happened.</div>
+</div></section>
+<section class="slide" data-sec="Code" data-c="3"><div class="wrap">
+  
+<h2>Instrumenting a Tool Call with OpenTelemetry</h2>
+<pre><span class="kw">from</span> opentelemetry <span class="kw">import</span> trace
+
+tracer = trace.get_tracer(<span class="str">"agent.tools"</span>)
+
+<span class="fn">@tracer.start_as_current_span</span>(<span class="str">"tool_call"</span>)
+<span class="kw">def</span> <span class="fn">run_tool</span>(name: str, args: dict) -> dict:
+    span = trace.get_current_span()
+    span.set_attribute(<span class="str">"tool.name"</span>, name)
+    span.set_attribute(<span class="str">"tool.args"</span>, str(args))
+
+    result = tool_registry[name](**args)
+
+    span.set_attribute(<span class="str">"tool.result_size"</span>, len(str(result)))
+    <span class="kw">return</span> result
+</pre>
+<div class="note good">Every framework here can emit spans this way — LangGraph nodes, CrewAI tasks, and Temporal Activities can all be wrapped with the same tracer, giving you one unified trace across a mixed stack.</div>
+</div></section>
+<section class="slide" data-sec="Observability" data-c="5"><div class="wrap">
+  
+<h2>Evaluating Agents — What Does "Good" Mean?</h2>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Offline evaluation</h3>
+    <ul>
+      <li>A fixed golden dataset of tasks with known-good outcomes</li>
+      <li>LLM-as-judge scoring against a rubric for open-ended answers</li>
+      <li>Run before every prompt or framework change — a regression suite for agents</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Online evaluation</h3>
+    <ul>
+      <li>Real production traffic, sampled and scored continuously</li>
+      <li>User feedback (thumbs up/down) fed back into the eval set</li>
+      <li>Alerting on drift in success rate, latency, or cost per run</li>
+    </ul>
+  </div>
+</div>
+<h3>Core metrics</h3>
+<table>
+  <tr><th>Metric</th><th>What it catches</th></tr>
+  <tr><td>Task success rate</td><td>Did the agent actually accomplish the goal, end to end?</td></tr>
+  <tr><td>Tool-call accuracy</td><td>Right tool, right arguments, on the first attempt?</td></tr>
+  <tr><td>Groundedness / faithfulness</td><td>Is the final answer actually supported by retrieved/tool data?</td></tr>
+  <tr><td>Latency &amp; cost per run</td><td>Is a "correct" answer arriving too slowly or too expensively to ship?</td></tr>
+</table>
+<div class="callout warn"><strong>Trap:</strong> optimizing only for one metric (e.g. success rate) while ignoring cost or latency often produces an agent that's "correct" but unusable in production.</div>
+</div></section>
+<section class="slide" data-sec="A2A" data-c="2"><div class="wrap">
+  
+<h2>A2A — Agent-to-Agent Protocol</h2>
+<p class="muted">MCP standardizes how <b>an agent talks to a tool</b>. A2A (originated at Google, now under the Linux Foundation) standardizes how <b>one agent talks to another agent</b> — including agents built by different teams, on different frameworks, or by different vendors.</p>
+<div class="grid grid-2">
+  <div class="card">
+    <h3>Agent Card</h3>
+    <p>A public JSON manifest (like <code>/.well-known/agent.json</code>) describing an agent's identity, capabilities, and how to reach it — how a client agent discovers what a remote agent can do before ever calling it.</p>
+  </div>
+  <div class="card">
+    <h3>Task</h3>
+    <p>The unit of work sent to a remote agent — has a lifecycle (submitted → working → input-required → completed/failed) that both sides track.</p>
+  </div>
+  <div class="card">
+    <h3>Artifacts</h3>
+    <p>The structured output a remote agent produces for a Task — can be streamed incrementally rather than returned only at the end.</p>
+  </div>
+  <div class="card">
+    <h3>Streaming updates</h3>
+    <p>Server-sent events let the calling agent show progress on a long-running remote task instead of blocking silently.</p>
+  </div>
+</div>
+</div></section>
+<section class="slide" data-sec="A2A" data-c="2"><div class="wrap">
+  
+<h2>A2A in Action</h2>
+<ol class="steps">
+  <li><b>Discover</b> — client agent fetches the remote agent's Agent Card to learn its capabilities and endpoint.</li>
+  <li><b>Delegate</b> — client sends a Task ("summarize this quarter's incidents") with any needed input.</li>
+  <li><b>Track</b> — client polls or streams status updates as the Task moves through its lifecycle.</li>
+  <li><b>Receive</b> — remote agent returns one or more Artifacts; client incorporates them into its own reasoning.</li>
+</ol>
+<h3>MCP vs A2A — complementary, not competing</h3>
+<table>
+  <tr><th></th><th class="good">MCP</th><th class="good">A2A</th></tr>
+  <tr><td>Connects</td><td>Agent ↔ Tool / data source</td><td>Agent ↔ Agent</td></tr>
+  <tr><td>Unit of work</td><td>Tool call (request/response)</td><td>Task (has a lifecycle, can be long-running)</td></tr>
+  <tr><td>Discovery</td><td><code>tools/list</code> at session start</td><td>Agent Card, fetched ahead of time</td></tr>
+  <tr><td>Typical use here</td><td>An agent reading docs, calling a search API</td><td>Your Research Crew's Planner delegating to a separately-deployed Reviewer agent</td></tr>
+</table>
+<div class="callout good"><strong>In practice:</strong> a single system often uses both — MCP for an agent's own tools, A2A when that agent needs to hand off part of the job to an entirely separate agent it doesn't control.</div>
 </div></section>
 <section class="slide" data-sec="Code" data-c="3"><div class="wrap">
   
@@ -485,6 +886,52 @@ g.add_edge(<span class="str">"summarize"</span>, <span class="str">"review"</spa
   <tr><td>Parallel research</td><td>LangGraph with 3 START edges</td></tr>
 </table>
 </div></section>
+<section class="slide" data-sec="Recap" data-c="0"><div class="wrap">
+  
+<h2>Check Your Understanding</h2>
+<details>
+  <summary>When would you reach for LangGraph instead of plain LangChain?</summary>
+  <p>When the workflow needs explicit state, branching, loops, or the ability to pause for human-in-the-loop approval — not just a single prompt-in, answer-out call.</p>
+</details>
+<details>
+  <summary>What's the difference between an MCP tool and an MCP resource?</summary>
+  <p>A tool is an action the model can invoke (with side effects); a resource is read-only context the host can attach, like a file or a database row.</p>
+</details>
+<details>
+  <summary>Why might a hierarchical topology be safer than a network topology for a new team?</summary>
+  <p>A manager agent keeps a single point of control and a clear audit trail; peer-to-peer delegation is more flexible but easier to get stuck in loops or lose track of who did what.</p>
+</details>
+<details>
+  <summary>In today's Research Crew, what would break if the Reviewer ran before the Researcher?</summary>
+  <p>The Reviewer has nothing to check yet — sequential process order matters whenever a later agent's task depends on an earlier agent's output.</p>
+</details>
+<details>
+  <summary>Why must Temporal Workflow code be deterministic, while Activity code doesn't need to be?</summary>
+  <p>Temporal recovers from failures by replaying a Workflow's event history — if the Workflow itself called an LLM or the network directly, replay could produce a different result each time. Side effects and non-determinism are pushed into Activities, which Temporal records the outcome of rather than re-running.</p>
+</details>
+<details>
+  <summary>An MCP server needs to ask the user "which project?" mid-tool-call. Which primitive handles that?</summary>
+  <p>Elicitation — it lets the server pause and ask the client to collect a specific missing input from the user, rather than guessing or failing.</p>
+</details>
+<details>
+  <summary>Your Research Crew's success rate looks great in evals, but production users complain it's slow and expensive. What went wrong with the eval setup?</summary>
+  <p>The eval likely only tracked task success rate and ignored latency and cost per run — a "correct" agent that's too slow or expensive to use has still failed as a product.</p>
+</details>
+<details>
+  <summary>Your Planner agent needs to hand a sub-task off to a Reviewer agent that a different team built and deployed separately. MCP or A2A?</summary>
+  <p>A2A — MCP connects an agent to tools and data; A2A is built for one agent delegating a Task to a genuinely separate agent, discovered via its Agent Card.</p>
+</details>
+</div></section>
+<section class="slide" data-sec="Discussion" data-c="0"><div class="wrap">
+  
+<h2>Discussion &amp; Open Questions</h2>
+<div class="qa">
+  <div class="qa-item"><div class="q">Where in your current work would a second agent (a reviewer, a critic) actually pay for itself?</div><div class="a">Think about steps where an independent check catches errors a single agent's own output can't.</div></div>
+  <div class="qa-item"><div class="q">Which of today's frameworks already overlaps with tools your team uses?</div><div class="a">Note any existing orchestration, workflow, or plugin systems this could replace or wrap.</div></div>
+  <div class="qa-item"><div class="q">What's one MCP server you'd want exposed internally first?</div><div class="a">Candidates: internal search, a ticketing system, a deployment tool, a knowledge base.</div></div>
+</div>
+<div class="callout"><strong>Next up (Day 5):</strong> evaluation and observability for agentic systems — tracing, feedback loops, and catching regressions before they reach production.</div>
+</div></section>
 </div>
 <div class="controls">
   <button class="btn" id="prev" title="Previous (←)">Back</button>
@@ -553,58 +1000,6 @@ g.add_edge(<span class="str">"summarize"</span>, <span class="str">"review"</spa
     else if (e.key === 'End') { e.preventDefault(); show(total - 1); }
     else if ((e.key === 'f' || e.key === 'F') && t !== 'INPUT') { toggleFs(); }
   });
-
-  /* ---------- temperature / top_p lab ---------- */
-  var TOKENS = [['mat', 2.0], ['floor', 1.5], ['sofa', 1.0], ['roof', 0.5], ['moon', 0.1]];
-  var barsEl = document.getElementById('bars');
-  var tempEl = document.getElementById('temp');
-  var toppEl = document.getElementById('topp');
-  var rows = TOKENS.map(function (t) {
-    var row = document.createElement('div');
-    row.className = 'bar-row';
-    row.innerHTML = '<div class="tok">' + t[0] + '<i>logit ' + t[1].toFixed(1) + '</i></div>' +
-      '<div class="bar-track"><div class="bar-fill"></div></div><div class="pct"></div>';
-    barsEl.appendChild(row);
-    return row;
-  });
-
-  function probs(T) {
-    if (T <= 0) return TOKENS.map(function (_, i) { return i === 0 ? 1 : 0; });
-    var ex = TOKENS.map(function (t) { return Math.exp(t[1] / T); });
-    var s = ex.reduce(function (a, b) { return a + b; }, 0);
-    return ex.map(function (e) { return e / s; });
-  }
-
-  function render() {
-    var T = parseFloat(tempEl.value), P = parseFloat(toppEl.value);
-    document.getElementById('tOut').textContent = T.toFixed(1);
-    document.getElementById('pOut').textContent = P.toFixed(2);
-    var pr = probs(T);
-    var order = pr.map(function (p, i) { return [p, i]; }).sort(function (a, b) { return b[0] - a[0]; });
-    var keep = {}, cum = 0;
-    for (var k = 0; k < order.length; k++) {
-      keep[order[k][1]] = true; cum += order[k][0];
-      if (cum >= P - 1e-9) break;
-    }
-    var kept = Object.keys(keep).length;
-    rows.forEach(function (row, i) {
-      row.classList.toggle('cut', !keep[i]);
-      row.querySelector('.bar-fill').style.width = (pr[i] * 100).toFixed(1) + '%';
-      row.querySelector('.pct').textContent = keep[i]
-        ? (pr[i] / cum * 100).toFixed(0) + '% chance'
-        : 'excluded';
-    });
-    var msg;
-    if (T === 0) msg = 'Temperature 0: always pick the highest-scoring token.';
-    else if (T < 0.6) msg = 'Low temperature: the distribution is sharp, so the top token wins almost every time.';
-    else if (T <= 1.1) msg = 'Around 1: the model\u2019s own probabilities, so you get natural variety.';
-    else msg = 'High temperature: the distribution flattens, so unlikely tokens get picked more often.';
-    if (P < 1) msg += ' top_p ' + P.toFixed(2) + ' keeps ' + kept + ' of ' + TOKENS.length + ' tokens and samples only from those.';
-    document.getElementById('labNote').textContent = msg;
-  }
-  tempEl.addEventListener('input', render);
-  toppEl.addEventListener('input', render);
-  render();
 
   show(0);
 })();
