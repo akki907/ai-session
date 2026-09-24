@@ -128,6 +128,83 @@
   .pipe b { display: block; font-size: 16px; }
   .pipe span { color: var(--muted); font-size: 14.5px; }
 
+  /* ---------- delegation animation (single vs multi agent) ---------- */
+  .deleg-anim { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 10px; margin: 14px 0; }
+  .deleg-anim svg { width: 100%; height: auto; display: block; }
+  .deleg-anim:hover * { animation-play-state: paused !important; }
+  .deleg-hint { text-align: center; font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+  .dnode rect { stroke-width: 1.5; }
+  .dnode text { font: 600 15px var(--sans); fill: var(--ink); }
+  .dnode .sub { font: 400 11px var(--sans); fill: var(--muted); }
+  .dchip text { font: 700 11px var(--sans); fill: var(--muted); }
+  .dline { stroke: var(--rule); stroke-width: 2; stroke-dasharray: 5 5; }
+  .dtoken { fill: var(--c4i); }
+
+  @keyframes tokTaskAgentOut {
+    0%   { transform: translate(0px,0px);   opacity: 0; }
+    2%   { transform: translate(0px,0px);   opacity: 1; }
+    14%  { transform: translate(350px,0px); opacity: 1; }
+    18%  { transform: translate(350px,0px); opacity: 0; }
+    82%  { transform: translate(350px,0px); opacity: 0; }
+    86%  { transform: translate(350px,0px); opacity: 1; }
+    96%  { transform: translate(700px,0px); opacity: 1; }
+    100% { transform: translate(700px,0px); opacity: 0; }
+  }
+  .tok-single { animation: tokTaskAgentOut 8s ease-in-out infinite; }
+
+  @keyframes chipThink   { 0%,20%,45%,100% { fill:#EEF1F8; } 25%,40% { fill: var(--c1); } }
+  @keyframes chipAct     { 0%,42%,67%,100% { fill:#EEF1F8; } 47%,62% { fill: var(--c2); } }
+  @keyframes chipObserve { 0%,64%,89%,100% { fill:#EEF1F8; } 69%,84% { fill: var(--c4); } }
+  .chip-think   rect { animation: chipThink 8s ease-in-out infinite; }
+  .chip-act     rect { animation: chipAct 8s ease-in-out infinite; }
+  .chip-observe rect { animation: chipObserve 8s ease-in-out infinite; }
+
+  @keyframes tokTaskToManager {
+    0%   { transform: translate(0px,0px);   opacity: 0; }
+    2%   { transform: translate(0px,0px);   opacity: 1; }
+    15%  { transform: translate(220px,0px); opacity: 1; }
+    19%  { transform: translate(220px,0px); opacity: 0; }
+    100% { transform: translate(220px,0px); opacity: 0; }
+  }
+  .tok-plan { animation: tokTaskToManager 8s ease-in-out infinite; }
+
+  @keyframes tokResearcher {
+    0%,20%   { transform: translate(0px,0px)      scale(1); opacity: 0; }
+    23%      { transform: translate(0px,0px)      scale(1); opacity: 1; }
+    40%      { transform: translate(390px,-140px) scale(1); opacity: 1; }
+    47%      { transform: translate(390px,-140px) scale(1.3); opacity: 1; }
+    55%      { transform: translate(390px,-140px) scale(1); opacity: 1; }
+    75%      { transform: translate(600px,0px)    scale(1); opacity: 1; }
+    80%,100% { transform: translate(600px,0px)    scale(1); opacity: 0; }
+  }
+  @keyframes tokCoder {
+    0%,20%   { transform: translate(0px,0px)   scale(1); opacity: 0; }
+    23%      { transform: translate(0px,0px)   scale(1); opacity: 1; }
+    40%      { transform: translate(390px,0px) scale(1); opacity: 1; }
+    47%      { transform: translate(390px,0px) scale(1.3); opacity: 1; }
+    55%      { transform: translate(390px,0px) scale(1); opacity: 1; }
+    75%      { transform: translate(600px,0px) scale(1); opacity: 1; }
+    80%,100% { transform: translate(600px,0px) scale(1); opacity: 0; }
+  }
+  @keyframes tokReviewer {
+    0%,20%   { transform: translate(0px,0px)     scale(1); opacity: 0; }
+    23%      { transform: translate(0px,0px)     scale(1); opacity: 1; }
+    40%      { transform: translate(390px,140px) scale(1); opacity: 1; }
+    47%      { transform: translate(390px,140px) scale(1.3); opacity: 1; }
+    55%      { transform: translate(390px,140px) scale(1); opacity: 1; }
+    75%      { transform: translate(600px,0px)   scale(1); opacity: 1; }
+    80%,100% { transform: translate(600px,0px)   scale(1); opacity: 0; }
+  }
+  .tok-researcher { animation: tokResearcher 8s ease-in-out infinite; }
+  .tok-coder      { animation: tokCoder 8s ease-in-out infinite -0.4s; }
+  .tok-reviewer   { animation: tokReviewer 8s ease-in-out infinite -0.8s; }
+
+  @keyframes managerGlow { 0%,10%,20%,72%,84%,100% { stroke-width: 1.5; } 15%,78% { stroke-width: 4; } }
+  .manager-glow rect { animation: managerGlow 8s ease-in-out infinite; }
+  @keyframes agentGlow { 0%,10%,20%,80%,92%,100% { stroke-width: 1.5; } 14%,88% { stroke-width: 4; } }
+  .agent-glow rect { animation: agentGlow 8s ease-in-out infinite; }
+
   /* ---------- prompt anatomy ---------- */
   .anat { display: grid; grid-template-columns: 96px 1fr; gap: 10px 14px; align-items: center; }
   .anat .tag { text-align: center; }
@@ -559,6 +636,59 @@ mcp = FastMCP(<span class="str">"docs-server"</span>)
   </div>
 </div>
 <div class="callout warn"><strong>Common trap:</strong> splitting a simple task into agents just because a framework makes it easy — more agents means more latency, more cost, and more places for errors to compound.</div>
+</div></section>
+<section class="slide" data-sec="Patterns" data-c="4"><div class="wrap">
+  
+<h2>Single Agent — Delegation in Motion</h2>
+<p class="muted">There's no delegation here — one agent owns the whole task and loops through it alone.</p>
+<div class="deleg-anim">
+<svg viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg">
+  <line class="dline" x1="170" y1="130" x2="340" y2="130"/>
+  <line class="dline" x1="560" y1="130" x2="730" y2="130"/>
+
+  <g class="dnode"><rect x="30" y="100" width="140" height="60" rx="8" fill="var(--c0)" stroke="var(--c0i)"/><text x="100" y="135" text-anchor="middle">Task</text></g>
+  <g class="dnode agent-glow"><rect x="340" y="70" width="220" height="120" rx="10" fill="var(--c1)" stroke="var(--c1i)"/><text x="450" y="95" text-anchor="middle">Agent</text></g>
+  <g class="dnode"><rect x="730" y="100" width="140" height="60" rx="8" fill="var(--c0)" stroke="var(--c0i)"/><text x="800" y="135" text-anchor="middle">Output</text></g>
+
+  <g class="dchip chip-think"><rect x="360" y="145" width="58" height="24" rx="12"/><text x="389" y="161" text-anchor="middle">Think</text></g>
+  <g class="dchip chip-act"><rect x="426" y="145" width="50" height="24" rx="12"/><text x="451" y="161" text-anchor="middle">Act</text></g>
+  <g class="dchip chip-observe"><rect x="484" y="145" width="72" height="24" rx="12"/><text x="520" y="161" text-anchor="middle">Observe</text></g>
+
+  <circle class="dtoken tok-single" cx="100" cy="130" r="8"/>
+</svg>
+</div>
+<p class="deleg-hint">The same agent thinks, calls tools, and observes results in a loop — "delegation" is just the agent calling itself again.</p>
+</div></section>
+<section class="slide" data-sec="Patterns" data-c="4"><div class="wrap">
+  
+<h2>Multi-Agent — Delegation in Motion</h2>
+<p class="muted">The Planner receives the task, fans it out to specialists in parallel, and the Output assembles once results return.</p>
+<div class="deleg-anim">
+<svg viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg">
+  <line class="dline" x1="170" y1="200" x2="230" y2="200"/>
+  <line class="dline" x1="390" y1="200" x2="620" y2="60"/>
+  <line class="dline" x1="390" y1="200" x2="620" y2="200"/>
+  <line class="dline" x1="390" y1="200" x2="620" y2="340"/>
+  <line class="dline" x1="780" y1="60"  x2="840" y2="185"/>
+  <line class="dline" x1="780" y1="200" x2="840" y2="200"/>
+  <line class="dline" x1="780" y1="340" x2="840" y2="215"/>
+
+  <g class="dnode"><rect x="20" y="170" width="140" height="60" rx="8" fill="var(--c0)" stroke="var(--c0i)"/><text x="90" y="205" text-anchor="middle">Task</text></g>
+  <g class="dnode manager-glow"><rect x="230" y="170" width="160" height="60" rx="8" fill="var(--c2)" stroke="var(--c2i)"/><text x="310" y="197" text-anchor="middle">Planner</text><text class="sub" x="310" y="215" text-anchor="middle">delegates</text></g>
+
+  <g class="dnode"><rect x="620" y="30"  width="160" height="60" rx="8" fill="var(--c1)" stroke="var(--c1i)"/><text x="700" y="65" text-anchor="middle">Researcher</text></g>
+  <g class="dnode"><rect x="620" y="170" width="160" height="60" rx="8" fill="var(--c1)" stroke="var(--c1i)"/><text x="700" y="205" text-anchor="middle">Coder</text></g>
+  <g class="dnode"><rect x="620" y="310" width="160" height="60" rx="8" fill="var(--c1)" stroke="var(--c1i)"/><text x="700" y="345" text-anchor="middle">Reviewer</text></g>
+
+  <g class="dnode"><rect x="840" y="170" width="140" height="60" rx="8" fill="var(--c0)" stroke="var(--c0i)"/><text x="910" y="197" text-anchor="middle">Output</text><text class="sub" x="910" y="215" text-anchor="middle">merges</text></g>
+
+  <circle class="dtoken tok-plan" cx="90" cy="200" r="8"/>
+  <circle class="dtoken tok-researcher" cx="310" cy="200" r="8"/>
+  <circle class="dtoken tok-coder" cx="310" cy="200" r="8"/>
+  <circle class="dtoken tok-reviewer" cx="310" cy="200" r="8"/>
+</svg>
+</div>
+<p class="deleg-hint">Three tokens leave the Planner at once and travel independently — that's the parallel fan-out a single agent can't do on its own.</p>
 </div></section>
 <section class="slide" data-sec="Patterns" data-c="4"><div class="wrap">
   
