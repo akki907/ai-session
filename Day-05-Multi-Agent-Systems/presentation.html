@@ -269,11 +269,11 @@
   <div class="section-grid">
     <div class="item"><div class="num">1</div><div class="name">Single vs Multi-Agent</div><div class="time">4 min</div></div>
     <div class="item"><div class="num">2</div><div class="name">Why (and Why Not) Multi-Agent</div><div class="time">5 min</div></div>
-    <div class="item"><div class="num">3</div><div class="name">Framework Selection</div><div class="time">3 min</div></div>
+    <div class="item"><div class="num">3</div><div class="name">Framework Selection</div><div class="time">2 min</div></div>
     <div class="item"><div class="num">4</div><div class="name">Planner / Worker</div><div class="time">4 min</div></div>
     <div class="item"><div class="num">5</div><div class="name">Supervisor + Reviewer + LLM-as-Judge</div><div class="time">6 min</div></div>
-    <div class="item"><div class="num">6</div><div class="name">Sequential + Parallel</div><div class="time">3 min</div></div>
-    <div class="item"><div class="num">7</div><div class="name">Shared State + Memory</div><div class="time">4 min</div></div>
+    <div class="item"><div class="num">6</div><div class="name">Sequential + Parallel</div><div class="time">2 min</div></div>
+    <div class="item"><div class="num">7</div><div class="name">Shared State, Memory + Gateway</div><div class="time">6 min</div></div>
     <div class="item"><div class="num">8</div><div class="name">Termination + Anti-Patterns</div><div class="time">4 min</div></div>
     <div class="item"><div class="num">9</div><div class="name">Failure + Evals</div><div class="time">4 min</div></div>
     <div class="item"><div class="num">10</div><div class="name">Hands-on</div><div class="time">8 min</div></div>
@@ -542,6 +542,36 @@ Aggregator</pre>
   <div class="callout warn"><strong>Watch out:</strong> long-term memory that isn't scoped (per-user, per-task) leaks context between unrelated runs — treat it like any other shared resource with access boundaries.</div>
 </div></section>
 
+<section class="slide" data-sec="Architecture" data-c="2"><div class="wrap">
+  <h2>The Agentic Gateway</h2>
+  <p class="muted">Once you have multiple agents each calling multiple tools, direct agent→tool integrations don't scale. A gateway centralizes that access — API Gateway + MCP tool server + governance, purpose-built for agents.</p>
+  <div class="diagram animated">
+    <div class="diagram-row">
+      <div class="node">Agent A</div>
+      <div class="node">Agent B</div>
+      <div class="node">Agent C</div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="node alt">Agentic Gateway<br><span style="font-weight:400;font-size:12px;">auth · policy · routing · audit</span></div>
+    <div class="arrow">↓</div>
+    <div class="diagram-row">
+      <div class="node gray">Jira / CRM</div>
+      <div class="node yellow">Databases</div>
+      <div class="node pink">Lambda / APIs</div>
+    </div>
+  </div>
+  <table>
+    <tr><th>Capability</th><th>Purpose</th></tr>
+    <tr><td>Tool discovery</td><td>Agent finds what's available instead of hardcoding integrations</td></tr>
+    <tr><td>AuthN / AuthZ</td><td>Verify identity, decide which tools this agent may call</td></tr>
+    <tr><td>Policy / guardrails</td><td>Block prohibited operations before they reach the backend</td></tr>
+    <tr><td>Observability + audit</td><td>Trace agent → tool → response; record who invoked what</td></tr>
+    <tr><td>Credential management</td><td>Keep API keys/secrets out of agent and tool-calling code entirely</td></tr>
+  </table>
+  <div class="callout good"><strong>Why it matters:</strong> without a gateway, N agents integrating with M tools means N×M integrations to secure and maintain. With one, every agent only needs to know the gateway's interface.</div>
+  <div class="callout"><strong>In AWS Bedrock AgentCore:</strong> the <strong>Gateway</strong> is this controlled tool-access layer (MCP/REST/Lambda); the <strong>Runtime</strong> is where the agent's own reasoning and workflow execute — two distinct pieces of the same architecture.</div>
+</div></section>
+
 <section class="slide" data-sec="Reliability" data-c="3"><div class="wrap">
   <h2>Termination &amp; Loop-Guard Conditions</h2>
   <div class="grid grid-2">
@@ -674,7 +704,7 @@ Aggregator</pre>
     <li>The Planner/Worker, Supervisor, and Reviewer patterns.</li>
     <li>An understanding of when parallel execution wins (latency) and when it loses (cost).</li>
     <li>Loop guards so a Reviewer cycle can't run forever, and the anti-patterns to watch for (ping-pong, duplicate work, silent disagreement).</li>
-    <li>The difference between shared state and real cross-session memory.</li>
+    <li>The difference between shared state and real cross-session memory, and why production systems put a gateway between agents and their tools.</li>
     <li>A failure-handling template: retry → fallback → human — plus how evals catch regressions before users do.</li>
   </ul>
   <div class="callout"><strong>Tomorrow:</strong> we put all of this behind a FastAPI service, add SSE streaming, retries, observability, and security guards.</div>
