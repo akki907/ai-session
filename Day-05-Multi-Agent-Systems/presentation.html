@@ -91,82 +91,9 @@
   /* ---------- layout helpers ---------- */
   .grid { display: grid; gap: 22px 28px; }
   .grid > pre { margin: 0; align-self: start; }
-  .g2 { grid-template-columns: 1fr 1fr; }
-  .g3 { grid-template-columns: repeat(3, 1fr); }
-  .g4 { grid-template-columns: repeat(4, 1fr); }
-  .g-split { grid-template-columns: minmax(280px, 0.9fr) 1.4fr; align-items: start; }
-  .col { border-top: 3px solid var(--fg, var(--ink)); padding-top: 10px; }
-  .col h3 { margin-top: 0; font-size: 18px; }
-  .col p { font-size: 15px; color: var(--muted); margin: 0; line-height: 1.5; }
-  .col ul { font-size: 15px; line-height: 1.55; color: var(--ink); padding-left: 18px; }
-  .col ul li { margin-bottom: 4px; }
-  .col table { margin: 0; }
-
-  /* ---------- notes (replace gradient call-outs) ---------- */
-  .note { background: #E4EDFA; border-radius: 6px; padding: 12px 16px; margin: 14px 0;
-    font-size: 15.5px; line-height: 1.55; max-width: 100%; }
-  .note.good { background: #DDF3E8; }
-  .note.warn { background: #FBE3E8; }
-  .note strong { color: var(--ink); }
-
-  /* ---------- nested hierarchy ---------- */
-  .nest { position: relative; padding: 32px 14px 14px; border: 1.5px solid var(--rule); }
-  .nest > .lbl { position: absolute; top: 8px; left: 14px; font-weight: 700; font-size: 14px; }
-  .n1 { background: #EEF1F8; border-radius: 16px; }
-  .n2 { background: #E2E7F5; border-radius: 13px; }
-  .n3 { background: #D5DDF2; border-radius: 10px; }
-  .n4 { background: #C7D2EE; border-radius: 8px; }
-  .n5 { background: var(--c1); border-color: var(--c1i); border-radius: 6px; color: var(--c1i);
-    padding: 30px 14px 16px; min-height: 60px; }
-
-  /* ---------- pipeline (transformer) ---------- */
-  .pipe { list-style: none; padding: 0 0 0 26px; position: relative; max-width: none; }
-  .pipe::before { content: ""; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: var(--rule); }
-  .pipe li { position: relative; margin: 0 0 14px; font-size: 16px; line-height: 1.45; }
-  .pipe li::before { content: ""; position: absolute; left: -26px; top: 5px; width: 16px; height: 16px;
-    border-radius: 50%; background: var(--bg); border: 2px solid var(--fg); }
-  .pipe b { display: block; font-size: 16px; }
-  .pipe span { color: var(--muted); font-size: 14.5px; }
-
-  /* ---------- prompt anatomy ---------- */
-  .anat { display: grid; grid-template-columns: 96px 1fr; gap: 10px 14px; align-items: center; }
-  .anat .tag { text-align: center; }
-  .anat div.d { font-size: 15.5px; }
-
-  /* ---------- agenda ---------- */
-  .tl { display: flex; gap: 3px; height: 46px; margin: 8px 0 22px; }
-  .tl div { display: flex; align-items: center; padding: 0 10px; border-radius: 4px;
-    background: var(--bg); color: var(--fg); font-weight: 700; font-size: 14px;
-    overflow: hidden; white-space: nowrap; }
-  .ag { display: grid; grid-template-columns: 190px 1fr 70px; gap: 16px; align-items: center;
-    padding: 11px 0; border-bottom: 1px solid var(--rule); }
-  .ag .sec { margin: 0; justify-self: start; }
-  .ag .t { text-align: right; font-weight: 700; font-family: var(--mono); font-size: 14px; }
-
-  /* ---------- temperature lab ---------- */
-  .lab { background: var(--surface); border: 1.5px solid var(--ink); border-radius: 10px; padding: 18px 22px; margin: 6px 0 12px; }
-  .lab .prompt { font-family: var(--mono); font-size: 16px; margin-bottom: 14px; }
-  .lab .prompt b { background: var(--c4); color: var(--c4i); padding: 1px 8px; border-radius: 4px; }
-  .ctrls { display: flex; gap: 40px; flex-wrap: wrap; margin-bottom: 16px; }
-  .ctrls label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 14px; min-width: 250px; flex: 1; }
-  .ctrls output { font-family: var(--mono); font-weight: 400; color: var(--muted); margin-left: 8px; }
-  input[type=range] { width: 100%; accent-color: var(--ink); }
-  .bar-row { display: grid; grid-template-columns: 130px 1fr 130px; gap: 14px; align-items: center; margin: 7px 0; font-size: 14px; }
-  .bar-row .tok { font-family: var(--mono); }
-  .bar-row .tok i { color: var(--muted); font-style: normal; margin-left: 6px; }
-  .bar-track { height: 22px; background: #EDF0F7; border-radius: 4px; overflow: hidden; }
-  .bar-fill { height: 100%; background: var(--c4i); border-radius: 4px; transition: width .15s ease; }
-  .bar-row.cut .bar-fill { background: #B6BDCF; }
-  .bar-row.cut { color: var(--muted); }
-  .bar-row .pct { font-family: var(--mono); text-align: right; }
-  .lab-note { font-size: 15px; color: var(--muted); margin: 10px 0 0; min-height: 44px; }
-
-  /* ---------- recap questions ---------- */
-  details { border-top: 1px solid var(--rule); padding: 11px 0; }
-  details:last-of-type { border-bottom: 1px solid var(--rule); }
-  summary { cursor: pointer; font-weight: 600; font-size: 16px; line-height: 1.4; }
-  details[open] summary { color: var(--c4i); }
-  details p { font-size: 15px; color: var(--muted); margin: 8px 0 0; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
 
   /* ---------- title slide: the one memorable moment ---------- */
   .slide.title-slide.active { display: flex; flex-direction: column; justify-content: center; }
@@ -202,15 +129,13 @@
   :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
   @media (max-width: 900px) {
-    .g2, .g3, .g4, .g-split { grid-template-columns: 1fr; }
-    .ag { grid-template-columns: 1fr 60px; }
-    .ag .d { grid-column: 1 / -1; order: 3; }
-    .bar-row { grid-template-columns: 90px 1fr 90px; }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
     .counter, .fs { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {
     .title-slide .tk, .title-slide .tk::after { animation: none; opacity: 1; transform: none; }
-    .blk, .bar-fill { transition: none; }
+    .blk { transition: none; }
+    .diagram .node, .diagram .arrow, .loop-ring, .loop-ring::before, .loop-guard-badge { animation: none !important; }
   }
 
 
@@ -243,7 +168,6 @@
   .node.gray   { --bg: #EEF1F8; --fg: var(--muted); background: #EEF1F8; color: var(--muted); border-color: var(--rule); }
 
   .arrow       { font-size: 22px; color: var(--ink); font-weight: 700; }
-  .arrow-row   { font-size: 18px; color: var(--ink); }
 
   .steps { counter-reset: step; }
   .steps li {
@@ -258,12 +182,6 @@
     font-weight: 700; display: flex; align-items: center; justify-content: center;
     font-size: 13px;
   }
-
-  .qa { display: grid; gap: 10px; }
-  .qa-item { background: var(--surface); border: 1px solid var(--rule);
-    border-radius: 8px; padding: 12px 16px; }
-  .qa-item .q { color: var(--c2i); font-weight: 600; margin-bottom: 4px; }
-  .qa-item .a { color: var(--muted); font-size: 14px; }
 
   .section-grid { display: grid; gap: 10px; }
   .section-grid .item {
@@ -280,10 +198,6 @@
   .section-grid .name { font-weight: 600; }
   .section-grid .time { margin-left: auto; color: var(--muted); font-size: 13px; font-family: var(--mono); }
 
-  kbd { background: #E6EAF4; color: var(--ink);
-    border: 1px solid var(--rule); border-radius: 4px; padding: 2px 6px;
-    font-family: var(--mono); font-size: 12px; }
-
   .slide > * { max-width: 1180px; width: 100%; }
   .slide .wrap { width: 100%; }
 
@@ -293,40 +207,76 @@
   .grid > .card p { font-size: 15px; color: var(--muted); margin: 0; line-height: 1.5; }
   .card { background: transparent; }
 
-  .grid       { display: grid; gap: 22px 28px; }
-  .grid-2     { grid-template-columns: 1fr 1fr; }
-  .grid-3     { grid-template-columns: repeat(3, 1fr); }
-  .grid-4     { grid-template-columns: repeat(4, 1fr); }
-
   pre code { background: transparent; color: inherit; padding: 0; font-size: inherit; }
+
+  /* ---------- animated diagram flow ---------- */
+  @keyframes nodeIn {
+    from { opacity: 0; transform: translateY(8px) scale(.96); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes arrowGrow {
+    from { opacity: 0; transform: scaleX(0); }
+    to   { opacity: 1; transform: scaleX(1); }
+  }
+  @keyframes pulseRing {
+    0%   { box-shadow: 0 0 0 0 rgba(139,29,57,.35); }
+    70%  { box-shadow: 0 0 0 10px rgba(139,29,57,0); }
+    100% { box-shadow: 0 0 0 0 rgba(139,29,57,0); }
+  }
+  .diagram.animated .node {
+    opacity: 0; animation: nodeIn .5s ease forwards;
+  }
+  .diagram.animated .arrow { transform-origin: left center; opacity: 0; animation: arrowGrow .35s ease forwards; }
+  .diagram.animated .node:nth-child(1) { animation-delay: .05s; }
+  .diagram.animated .node:nth-child(3) { animation-delay: .3s; }
+  .diagram.animated .node:nth-child(5) { animation-delay: .55s; }
+  .diagram.animated .node:nth-child(7) { animation-delay: .8s; }
+  .diagram.animated .arrow:nth-child(2) { animation-delay: .2s; }
+  .diagram.animated .arrow:nth-child(4) { animation-delay: .45s; }
+  .diagram.animated .arrow:nth-child(6) { animation-delay: .7s; }
+
+  .loop-diagram { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .loop-ring {
+    position: relative; width: 190px; height: 190px; border-radius: 50%;
+    border: 3px dashed var(--c3i); display: flex; align-items: center; justify-content: center;
+  }
+  .loop-ring::before {
+    content: "↻"; position: absolute; top: -14px; right: 6px; font-size: 26px;
+    color: var(--c3i); background: var(--paper); animation: spin 3s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loop-ring .center { text-align: center; font-weight: 700; font-size: 15px; color: var(--c3i); }
+  .loop-ring .center span { display: block; font-weight: 400; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .loop-guard-badge {
+    display: inline-flex; align-items: center; gap: 8px; background: var(--c1);
+    color: var(--c1i); border: 1.5px solid var(--c1i); border-radius: 999px;
+    padding: 6px 14px; font-weight: 700; font-size: 13.5px;
+    animation: pulseRing 2.4s ease-in-out infinite;
+  }
 </style>
 </head>
 <body>
 <div class="deck" id="deck">
 <section class="slide title-slide active"><div class="wrap">
   <span class="tag c0">Day 5</span>
-  <h1 aria-label="Frameworks & Multi-Agent Systems"><span class="tk a" style="--i:0">Frameworks</span><span class="tk b" style="--i:1">&</span><span class="tk c" style="--i:2">Multi-Agent Systems</span></h1>
-  <p class="lede">LangChain · LangGraph · CrewAI · MCP — and when to use multiple agents instead of one.</p>
-  <p class="fine">⏱ 45 minutes · 🎯 Hands-on included · Builds on prior days.</p>
-</div></section>
-<section class="slide title-slide active"><div class="wrap">
-  <span class="tag c0">Day 5</span>
-  <h1 aria-label="Multi-Agent Systems"><span class="tk a" style="--i:0">Multi-Agent</span><span class="tk b" style="--i:1"></span><span class="tk c" style="--i:2">Systems</span></h1>
-  <p class="lede">Planner/Worker, Supervisor, Reviewer. Parallel execution. Shared state. Failure handling.</p>
+  <h1 aria-label="Multi-Agent Systems"><span class="tk a" style="--i:0">Frameworks</span><span class="tk b" style="--i:1">&</span><span class="tk c" style="--i:2">Multi-Agent Systems</span></h1>
+  <p class="lede">LangChain · LangGraph · CrewAI — Planner/Worker, Supervisor, Reviewer, and when to use multiple agents instead of one.</p>
   <p class="fine">⏱ 45 minutes · 🎯 Hands-on included · Builds on prior days.</p>
 </div></section>
 
 <section class="slide" data-sec="Agenda" data-c="0"><div class="wrap">
   <h2>Today's 45 Minutes</h2>
   <div class="section-grid">
-    <div class="item"><div class="num">1</div><div class="name">Single vs Multi-Agent</div><div class="time">5 min</div></div>
-    <div class="item"><div class="num">2</div><div class="name">Why Multi-Agent</div><div class="time">5 min</div></div>
-    <div class="item"><div class="num">3</div><div class="name">Planner / Worker</div><div class="time">5 min</div></div>
-    <div class="item"><div class="num">4</div><div class="name">Supervisor + Reviewer</div><div class="time">5 min</div></div>
-    <div class="item"><div class="num">5</div><div class="name">Sequential + Parallel</div><div class="time">5 min</div></div>
-    <div class="item"><div class="num">6</div><div class="name">Shared State + Comms</div><div class="time">5 min</div></div>
-    <div class="item"><div class="num">7</div><div class="name">Failure + Retry</div><div class="time">5 min</div></div>
-    <div class="item"><div class="num">8</div><div class="name">Hands-on (15 min)</div><div class="time">15 min</div></div>
+    <div class="item"><div class="num">1</div><div class="name">Single vs Multi-Agent</div><div class="time">4 min</div></div>
+    <div class="item"><div class="num">2</div><div class="name">Why (and Why Not) Multi-Agent</div><div class="time">5 min</div></div>
+    <div class="item"><div class="num">3</div><div class="name">Framework Selection</div><div class="time">3 min</div></div>
+    <div class="item"><div class="num">4</div><div class="name">Planner / Worker</div><div class="time">4 min</div></div>
+    <div class="item"><div class="num">5</div><div class="name">Supervisor + Reviewer + LLM-as-Judge</div><div class="time">6 min</div></div>
+    <div class="item"><div class="num">6</div><div class="name">Sequential + Parallel</div><div class="time">3 min</div></div>
+    <div class="item"><div class="num">7</div><div class="name">Shared State + Memory</div><div class="time">4 min</div></div>
+    <div class="item"><div class="num">8</div><div class="name">Termination + Anti-Patterns</div><div class="time">4 min</div></div>
+    <div class="item"><div class="num">9</div><div class="name">Failure + Evals</div><div class="time">4 min</div></div>
+    <div class="item"><div class="num">10</div><div class="name">Hands-on</div><div class="time">8 min</div></div>
   </div>
 </div></section>
 
@@ -385,6 +335,55 @@ Supervisor
   <div class="callout warn"><strong>Rule of thumb:</strong> start with a single agent. Split when (a) prompts exceed ~3k tokens of instructions, or (b) two distinct permission domains appear.</div>
 </div></section>
 
+<section class="slide" data-sec="Core ideas" data-c="1"><div class="wrap">
+  <h2>When NOT to Use Multi-Agent</h2>
+  <p class="muted">The over-engineering trap: splitting an agent because the pattern looks impressive, not because the task needs it.</p>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Signs you don't need it</h3>
+      <ul>
+        <li>The task is genuinely sequential end-to-end — no independent subtasks to parallelize or specialize.</li>
+        <li>Instructions + tools fit comfortably in one prompt (well under ~3k tokens).</li>
+        <li>One person/team owns the whole workflow — no real permission boundary to enforce.</li>
+        <li>You're optimizing for a demo, not a debuggable production path.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>What it costs you anyway</h3>
+      <ul>
+        <li>4-6x the tokens of a single agent for the same task (each hop re-sends context).</li>
+        <li>A failure can now originate in any of N agents — harder to trace than one prompt.</li>
+        <li>More surfaces for silent disagreement between agents — see the anti-patterns slide.</li>
+        <li>Slower to iterate — changing one agent's prompt can shift another agent's behavior.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout good"><strong>Rule of thumb:</strong> if you can't name the specific permission boundary or parallelizable subtask multi-agent buys you, you probably don't need it yet.</div>
+</div></section>
+
+<section class="slide" data-sec="Frameworks" data-c="4"><div class="wrap">
+  <h2>Which Framework, and When?</h2>
+  <table>
+    <tr><th>You need</th><th>Reach for</th><th>Why</th></tr>
+    <tr>
+      <td>A single agent with a few tools<span class="sub">simple chatbot, one linear task</span></td>
+      <td><code>LangChain</code></td>
+      <td>Lowest ceremony — chains and a tool-calling agent, no graph to design.</td>
+    </tr>
+    <tr>
+      <td>Branching logic, loops, shared state<span class="sub">Planner/Worker, Supervisor, Reviewer</span></td>
+      <td><code>LangGraph</code></td>
+      <td>Explicit state graph — conditional edges, checkpoints, human-in-the-loop built in.</td>
+    </tr>
+    <tr>
+      <td>Role-based delegation<span class="sub">"Researcher", "Writer", "Editor" as personas</span></td>
+      <td><code>CrewAI</code></td>
+      <td>Crew/role abstraction reads closer to an org chart than a graph.</td>
+    </tr>
+  </table>
+  <div class="callout good"><strong>Decision note:</strong> pick the framework after you know the pattern, not before. A Supervisor pattern in LangChain fights the library; the same pattern in LangGraph is a few conditional edges.</div>
+</div></section>
+
 <section class="slide" data-sec="Patterns" data-c="1"><div class="wrap">
   <h2>Planner / Worker</h2>
   <pre>Planner
@@ -404,11 +403,14 @@ Aggregator</pre>
 
 <section class="slide" data-sec="Patterns" data-c="1"><div class="wrap">
   <h2>Supervisor</h2>
-  <pre>            Supervisor
-          /     |      \
-         ↓      ↓       ↓
-    Research  Coding  Database
-      Agent    Agent     Agent</pre>
+  <div class="diagram animated">
+    <div class="node">Supervisor</div>
+    <div class="diagram-row">
+      <div class="node alt">Research Agent</div>
+      <div class="node yellow">Coding Agent</div>
+      <div class="node pink">Database Agent</div>
+    </div>
+  </div>
   <ul>
     <li>Routes incoming requests to the right specialist.</li>
     <li>Owns the shared state across agents.</li>
@@ -419,23 +421,65 @@ Aggregator</pre>
 
 <section class="slide" data-sec="Patterns" data-c="1"><div class="wrap">
   <h2>Reviewer</h2>
-  <pre>Worker
-  ↓
-Output
-  ↓
-Reviewer
-  ↓
- ┌─────────┐
- ↓         ↓
-Pass      Fail
- ↓         ↓
-End      Retry</pre>
+  <div class="diagram animated">
+    <div class="diagram-row">
+      <div class="node">Worker</div>
+      <div class="arrow">→</div>
+      <div class="node gray">Output</div>
+      <div class="arrow">→</div>
+      <div class="node alt">Reviewer</div>
+    </div>
+    <div class="diagram-row" style="margin-top:6px;">
+      <div class="node" style="border-style:dashed;">PASS → End</div>
+      <div class="node pink" style="border-style:dashed;">FAIL → Retry ↺</div>
+    </div>
+  </div>
   <ul>
     <li>Validates the worker's output against a rubric.</li>
     <li>On <code>PASS</code> → end.</li>
     <li>On <code>FAIL</code> → loop back with reviewer feedback.</li>
   </ul>
-  <div class="callout good"><strong>Pro tip:</strong> use an LLM-as-judge reviewer with a strict schema; never trust the same LLM that produced the output.</div>
+  <div class="callout good"><strong>Pro tip:</strong> the Reviewer is usually implemented as LLM-as-judge — next slide covers how, plus its trade-offs.</div>
+</div></section>
+
+<section class="slide" data-sec="Patterns" data-c="1"><div class="wrap">
+  <h2>LLM-as-Judge, in Detail</h2>
+  <p class="muted">The Reviewer node's most common implementation: a second LLM call that scores the first LLM's output against a rubric — instead of a human or a hand-written rule doing it.</p>
+  <div class="diagram animated">
+    <div class="diagram-row">
+      <div class="node">Worker Output</div>
+      <div class="arrow">→</div>
+      <div class="node yellow">Judge Prompt<br><span style="font-weight:400;font-size:12px;">rubric + output + (optional) reference</span></div>
+      <div class="arrow">→</div>
+      <div class="node alt">Judge LLM</div>
+    </div>
+    <div class="diagram-row" style="margin-top:6px;">
+      <div class="node" style="border-style:dashed;">Score: 0.9<br><span style="font-weight:400;font-size:12px;">PASS</span></div>
+      <div class="node pink" style="border-style:dashed;">Score: 0.4<br><span style="font-weight:400;font-size:12px;">FAIL + reason</span></div>
+    </div>
+  </div>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Pros</h3>
+      <ul>
+        <li>Scales — no human in the loop for every run, works at eval-suite volume.</li>
+        <li>Catches things rules can't: tone, faithfulness to source, reasoning quality.</li>
+        <li>Rubric doubles as documentation of "what good looks like."</li>
+        <li>Cheaper and faster than a human reviewer for routine checks.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Cons</h3>
+      <ul>
+        <li>Judge inherits the same biases/blind spots as the model class it comes from.</li>
+        <li>Self-preference bias — a judge tends to score outputs from its own model family higher.</li>
+        <li>Position/verbosity bias — can favor the first option shown, or longer answers, regardless of quality.</li>
+        <li>Adds a real LLM call: more cost and latency per review.</li>
+        <li>Its own scores need occasional human spot-checks — it's not ground truth.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout warn"><strong>Best practice:</strong> use a different (often stronger) model as judge than the one being judged, give it a strict output schema (score + reason, not prose), and periodically audit judge verdicts against human review.</div>
 </div></section>
 
 <section class="slide" data-sec="Execution" data-c="2"><div class="wrap">
@@ -474,55 +518,151 @@ End      Retry</pre>
   <div class="callout warn"><strong>Watch out:</strong> shared state grows. Cap it. Summarize. Persist only what's needed.</div>
 </div></section>
 
+<section class="slide" data-sec="Architecture" data-c="2"><div class="wrap">
+  <h2>Memory Across Agents</h2>
+  <p class="muted">Shared state (previous slide) lives only for one run. Memory is what survives across runs.</p>
+  <table>
+    <tr><th>Type</th><th>Scope</th><th>Example</th></tr>
+    <tr>
+      <td>Shared state<span class="sub">what you just saw</span></td>
+      <td>One run only — gone when the graph finishes</td>
+      <td>TypedDict passed between Planner → Workers → Aggregator</td>
+    </tr>
+    <tr>
+      <td>Short-term memory</td>
+      <td>One conversation / session</td>
+      <td>Message history the agent re-reads each turn</td>
+    </tr>
+    <tr>
+      <td>Long-term memory</td>
+      <td>Across sessions, across users of the same agent</td>
+      <td>A Research Agent that recalls findings from last week's run via a vector store</td>
+    </tr>
+  </table>
+  <div class="callout warn"><strong>Watch out:</strong> long-term memory that isn't scoped (per-user, per-task) leaks context between unrelated runs — treat it like any other shared resource with access boundaries.</div>
+</div></section>
+
+<section class="slide" data-sec="Reliability" data-c="3"><div class="wrap">
+  <h2>Termination &amp; Loop-Guard Conditions</h2>
+  <div class="grid grid-2">
+    <div class="loop-diagram">
+      <div class="loop-ring">
+        <div class="center">Reviewer loop<span>Worker → Review → Retry</span></div>
+      </div>
+      <span class="loop-guard-badge">⛔ max_iterations = 3</span>
+    </div>
+    <div>
+      <h3>Guard every loop with:</h3>
+      <ul>
+        <li><strong>Iteration cap</strong> — track a counter in shared state; hard-stop at N (e.g. 3–5).</li>
+        <li><strong>Progress check</strong> — if the reviewer's feedback repeats verbatim, stop early — the agent isn't improving.</li>
+        <li><strong>Time / cost budget</strong> — wall-clock or token-spend ceiling per run, not just per call.</li>
+        <li><strong>Explicit exit node</strong> — every graph loop needs a conditional edge that can say "done," including "gave up."</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout warn"><strong>Anti-pattern:</strong> a Supervisor that re-routes to the same agent forever because "PASS" is never satisfied. When the cap is hit, escalate to a human — don't fail silently.</div>
+</div></section>
+
+<section class="slide" data-sec="Reliability" data-c="3"><div class="wrap">
+  <h2>Multi-Agent Anti-Patterns</h2>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Ping-pong</h3>
+      <p>Two agents keep deferring back to each other ("ask the other agent") with neither taking ownership — burns iterations without progress. Fix: one agent must own the decision.</p>
+    </div>
+    <div class="card">
+      <h3>Duplicate work</h3>
+      <p>Two workers solve the same subtask because shared state wasn't checked before dispatch. Fix: Planner marks tasks as claimed before fan-out.</p>
+    </div>
+    <div class="card">
+      <h3>Silent disagreement</h3>
+      <p>Two agents return conflicting facts and the Aggregator just picks one without flagging it. Fix: an explicit reconciliation step, or surface the conflict to the reviewer/human.</p>
+    </div>
+    <div class="card">
+      <h3>Hallucinated success</h3>
+      <p>An agent reports <code>"status": "completed"</code> without actually calling the tool or validating the output. Fix: verify claims against tool results, don't trust the agent's self-report.</p>
+    </div>
+  </div>
+  <div class="callout warn"><strong>Common thread:</strong> every one of these is a coordination failure, not a reasoning failure — better prompts won't fix them, better state and ownership rules will.</div>
+</div></section>
+
 <section class="slide" data-sec="Reliability" data-c="3"><div class="wrap">
   <h2>Failure Handling + Retry</h2>
-  <pre>Agent
-  ↓
-Tool
-  ↓
-Failure?
- ├── No → Continue
- └── Yes
-      ↓
-    Retry  (max 3, exponential backoff)
-      ↓
-    Fallback  (cached value / default)
-      ↓
-    Human  (last resort)</pre>
+  <div class="diagram animated">
+    <div class="diagram-row">
+      <div class="node">Agent</div>
+      <div class="arrow">→</div>
+      <div class="node gray">Tool</div>
+      <div class="arrow">→</div>
+      <div class="node yellow">Failure?</div>
+    </div>
+    <div class="diagram-row" style="margin-top:6px;">
+      <div class="node alt">Retry ×3</div>
+      <div class="arrow">→</div>
+      <div class="node">Fallback</div>
+      <div class="arrow">→</div>
+      <div class="node pink">Human</div>
+    </div>
+  </div>
   <ul>
-    <li><strong>Retry</strong> transient failures (timeouts, 5xx, rate limits).</li>
+    <li><strong>Retry</strong> transient failures (timeouts, 5xx, rate limits) — with exponential backoff.</li>
     <li><strong>Fallback</strong> stale cached result, or skip the tool and explain.</li>
     <li><strong>Human</strong> when retries + fallbacks both fail.</li>
   </ul>
-  <div class="callout warn"><strong>Anti-patterns:</strong> infinite loops, conflicting agent results, agents that hallucinate success.</div>
+  <div class="callout warn"><strong>Multi-agent specific:</strong> a failure can cascade — if Worker B depends on Worker A's result, A's fallback value silently becomes B's input. Tag fallback results in shared state so downstream agents (and the Reviewer) know to treat them as lower-confidence.</div>
+</div></section>
+
+<section class="slide" data-sec="Quality" data-c="4"><div class="wrap">
+  <h2>Evaluating Multi-Agent Systems</h2>
+  <p class="muted">The Reviewer checks one run. Evals check whether the <em>system</em> is reliable across many runs.</p>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>What to evaluate</h3>
+      <ul>
+        <li><strong>End-to-end</strong> — does the final answer meet the goal? (task success rate)</li>
+        <li><strong>Per-agent</strong> — did the Planner produce sane sub-tasks? Did each Worker's output actually get used?</li>
+        <li><strong>Handoff quality</strong> — did state passed between agents stay complete and correct?</li>
+        <li><strong>Efficiency</strong> — tokens, latency, and iteration count per run, not just correctness.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>How</h3>
+      <ul>
+        <li><strong>Golden test set</strong> — a fixed set of inputs with known-good outputs, run on every change.</li>
+        <li><strong>LLM-as-judge</strong> — same idea as the Reviewer, but scoring a batch offline against a rubric.</li>
+        <li><strong>Trace review</strong> — inspect the full multi-agent trace (spans per agent/tool call), not just the final answer.</li>
+        <li><strong>Regression gate</strong> — block a prompt/graph change if eval scores drop.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout good"><strong>Why it matters here:</strong> multi-agent systems fail in more places than single agents (Planner, each Worker, Aggregator, Reviewer) — evals are how you catch a regression in one agent before it reaches users.</div>
 </div></section>
 
 <section class="slide" data-sec="Architecture" data-c="2"><div class="wrap">
   <h2>Autonomous Research Agent — End-to-End</h2>
-  <pre>                 Planner
-                    |
-       ┌────────────┼────────────┐
-       ↓            ↓            ↓
-    Web Agent   GitHub Agent  Docs Agent
-       |            |            |
-       └────────────┼────────────┘
-                    ↓
-                Summarizer
-                    ↓
-                 Reviewer
-                    ↓
-              Final Answer</pre>
+  <div class="diagram animated">
+    <div class="node">Planner</div>
+    <div class="diagram-row">
+      <div class="node alt">Web Agent</div>
+      <div class="node yellow">GitHub Agent</div>
+      <div class="node pink">Docs Agent</div>
+    </div>
+    <div class="node">Summarizer</div>
+    <div class="node gray">Reviewer</div>
+    <div class="node" style="border-style:dashed;">Final Answer</div>
+  </div>
   <div class="callout"><strong>What you'll build today</strong> — a 3-agent research system: Planner fans out to Web/GitHub/Docs, results aggregate, Reviewer validates.</div>
 </div></section>
 
 <section class="slide" data-sec="Hands-on" data-c="4"><div class="wrap">
   <h2>Hands-on — Build a Planner / Worker / Reviewer</h2>
   <ol class="steps">
-    <li>Define the shared state (TypedDict) with <code>question</code>, <code>findings</code>, <code>review</code>, <code>answer</code>.</li>
+    <li>Define the shared state (TypedDict) with <code>question</code>, <code>findings</code>, <code>review</code>, <code>answer</code>, and an <code>iteration</code> counter.</li>
     <li>Implement a Planner node that decomposes the question into 3 sub-questions.</li>
     <li>Implement 3 Worker nodes (web, github, docs) running in parallel.</li>
     <li>Wire the parallel edges from Planner → workers → Aggregator.</li>
-    <li>Add a Reviewer node. On <code>NEEDS_WORK</code>, loop back to Aggregator with feedback.</li>
+    <li>Add a Reviewer node with a loop guard: on <code>NEEDS_WORK</code>, loop back to Aggregator with feedback, capped at 3 iterations before escalating.</li>
   </ol>
   <div class="callout good"><strong>Open</strong> <code>code/langgraph/multi_agent.py</code> from Day 4 as your starting point.</div>
 </div></section>
@@ -530,10 +670,12 @@ Failure?
 <section class="slide" data-sec="Recap" data-c="5"><div class="wrap">
   <h2>What You Now Have</h2>
   <ul>
-    <li>A vocabulary for multi-agent topologies.</li>
+    <li>A vocabulary for multi-agent topologies, which framework fits which pattern, and when to skip multi-agent entirely.</li>
     <li>The Planner/Worker, Supervisor, and Reviewer patterns.</li>
     <li>An understanding of when parallel execution wins (latency) and when it loses (cost).</li>
-    <li>A failure-handling template: retry → fallback → human.</li>
+    <li>Loop guards so a Reviewer cycle can't run forever, and the anti-patterns to watch for (ping-pong, duplicate work, silent disagreement).</li>
+    <li>The difference between shared state and real cross-session memory.</li>
+    <li>A failure-handling template: retry → fallback → human — plus how evals catch regressions before users do.</li>
   </ul>
   <div class="callout"><strong>Tomorrow:</strong> we put all of this behind a FastAPI service, add SSE streaming, retries, observability, and security guards.</div>
 </div></section>
@@ -586,6 +728,16 @@ Failure?
     document.getElementById('prev').disabled = i === 0;
     document.getElementById('next').disabled = i === total - 1;
     idx = i;
+
+    // Re-trigger diagram entrance animations each time a slide is shown
+    var anims = slides[i].querySelectorAll('.diagram.animated');
+    anims.forEach(function (d) {
+      d.querySelectorAll('.node, .arrow').forEach(function (el) {
+        el.style.animation = 'none';
+        void el.offsetWidth;
+        el.style.animation = '';
+      });
+    });
   }
 
   function toggleFs() {
@@ -606,58 +758,6 @@ Failure?
     else if (e.key === 'End') { e.preventDefault(); show(total - 1); }
     else if ((e.key === 'f' || e.key === 'F') && t !== 'INPUT') { toggleFs(); }
   });
-
-  /* ---------- temperature / top_p lab ---------- */
-  var TOKENS = [['mat', 2.0], ['floor', 1.5], ['sofa', 1.0], ['roof', 0.5], ['moon', 0.1]];
-  var barsEl = document.getElementById('bars');
-  var tempEl = document.getElementById('temp');
-  var toppEl = document.getElementById('topp');
-  var rows = TOKENS.map(function (t) {
-    var row = document.createElement('div');
-    row.className = 'bar-row';
-    row.innerHTML = '<div class="tok">' + t[0] + '<i>logit ' + t[1].toFixed(1) + '</i></div>' +
-      '<div class="bar-track"><div class="bar-fill"></div></div><div class="pct"></div>';
-    barsEl.appendChild(row);
-    return row;
-  });
-
-  function probs(T) {
-    if (T <= 0) return TOKENS.map(function (_, i) { return i === 0 ? 1 : 0; });
-    var ex = TOKENS.map(function (t) { return Math.exp(t[1] / T); });
-    var s = ex.reduce(function (a, b) { return a + b; }, 0);
-    return ex.map(function (e) { return e / s; });
-  }
-
-  function render() {
-    var T = parseFloat(tempEl.value), P = parseFloat(toppEl.value);
-    document.getElementById('tOut').textContent = T.toFixed(1);
-    document.getElementById('pOut').textContent = P.toFixed(2);
-    var pr = probs(T);
-    var order = pr.map(function (p, i) { return [p, i]; }).sort(function (a, b) { return b[0] - a[0]; });
-    var keep = {}, cum = 0;
-    for (var k = 0; k < order.length; k++) {
-      keep[order[k][1]] = true; cum += order[k][0];
-      if (cum >= P - 1e-9) break;
-    }
-    var kept = Object.keys(keep).length;
-    rows.forEach(function (row, i) {
-      row.classList.toggle('cut', !keep[i]);
-      row.querySelector('.bar-fill').style.width = (pr[i] * 100).toFixed(1) + '%';
-      row.querySelector('.pct').textContent = keep[i]
-        ? (pr[i] / cum * 100).toFixed(0) + '% chance'
-        : 'excluded';
-    });
-    var msg;
-    if (T === 0) msg = 'Temperature 0: always pick the highest-scoring token.';
-    else if (T < 0.6) msg = 'Low temperature: the distribution is sharp, so the top token wins almost every time.';
-    else if (T <= 1.1) msg = 'Around 1: the model\u2019s own probabilities, so you get natural variety.';
-    else msg = 'High temperature: the distribution flattens, so unlikely tokens get picked more often.';
-    if (P < 1) msg += ' top_p ' + P.toFixed(2) + ' keeps ' + kept + ' of ' + TOKENS.length + ' tokens and samples only from those.';
-    document.getElementById('labNote').textContent = msg;
-  }
-  tempEl.addEventListener('input', render);
-  toppEl.addEventListener('input', render);
-  render();
 
   show(0);
 })();
